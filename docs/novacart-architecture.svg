@@ -1,55 +1,118 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
-<title id="title">NovaCart Data Engineering Architecture</title>
-<desc id="desc">Azure SQL source accessed through Databricks Lakehouse Federation, processed through Bronze, Silver and Gold Delta layers, then published to analytics tables, snapshots, dashboard and SQL alert. A Databricks Job orchestrates the workflow.</desc>
+<title id="title">NovaCart | Incremental Retail Lakehouse Architecture</title>
+<desc id="desc">Azure SQL source data flows through Databricks Lakehouse Federation into Bronze, Silver, and Gold Delta Lake layers. Processing-control tables track per-entity watermarks and run progress. Gold publishes order analytics, SCD Type 2 history, category performance, and Parquet snapshots. A Databricks Job sequences the processing and analytics tasks.</desc>
 <defs>
-  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#071426"/><stop offset="1" stop-color="#102844"/></linearGradient>
-  <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#153e68"/><stop offset="1" stop-color="#102b4b"/></linearGradient>
-  <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#68d9ff"/></marker>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#07111f"/><stop offset="1" stop-color="#102b43"/></linearGradient>
+  <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#122a40"/><stop offset="1" stop-color="#0d2033"/></linearGradient>
+  <linearGradient id="goldPanel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#493a1b"/><stop offset="1" stop-color="#2d2b20"/></linearGradient>
+  <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#5ee1d0"/></marker>
+  <marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#a8a4ff"/></marker>
   <style>
-    .heading{font:700 30px Arial,sans-serif;fill:#f1f7ff}.sub{font:16px Arial,sans-serif;fill:#9eb7d3}.section{font:700 16px Arial,sans-serif;fill:#9bc9f2;letter-spacing:2px}.cardtitle{font:700 20px Arial,sans-serif;fill:#f5f9ff}.body{font:15px Arial,sans-serif;fill:#c6d6e8}.small{font:13px Arial,sans-serif;fill:#9eb7d3}.flow{fill:none;stroke:#68d9ff;stroke-width:3;marker-end:url(#arrow)}.dash{fill:none;stroke:#9eafff;stroke-width:2;stroke-dasharray:7 7;marker-end:url(#arrow)}.card{fill:#102b48;stroke:#35658b;stroke-width:2}.bronze{fill:#3b2b1a;stroke:#e8a34b;stroke-width:2}.silver{fill:#26384b;stroke:#b8c9dc;stroke-width:2}.gold{fill:#3c341c;stroke:#e8ca65;stroke-width:2}.out{fill:#102b48;stroke:#3e9fd0;stroke-width:2}
+    text{font-family:Inter,Segoe UI,Arial,sans-serif}.eyebrow{font-size:13px;font-weight:700;letter-spacing:2.4px;fill:#7f9bb5}.title{font-size:37px;font-weight:800;letter-spacing:1px;fill:#f3f8ff}.subtitle{font-size:17px;fill:#a9bfd3}.panel{fill:url(#panel);stroke:#28465f;stroke-width:1.5}.source{fill:#142c42;stroke:#5280a3;stroke-width:1.5}.control{fill:#201f45;stroke:#8985ff;stroke-width:1.5}.bronze{fill:#392919;stroke:#e9a65b;stroke-width:2}.silver{fill:#1e3447;stroke:#9eb9ce;stroke-width:2}.gold{fill:url(#goldPanel);stroke:#e6c65d;stroke-width:2}.output{fill:#102b40;stroke:#3d91ad;stroke-width:1.5}.stage{font-size:12px;font-weight:800;letter-spacing:2px;fill:#8eabc4}.cardTitle{font-size:19px;font-weight:750;fill:#f4f8ff}.body{font-size:14px;fill:#c2d3e2}.muted{font-size:12px;fill:#91abc0}.chip{font-size:11px;font-weight:700;letter-spacing:.8px;fill:#b5cbe0}.line{fill:none;stroke:#5ee1d0;stroke-width:2.7;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow)}.controlLine{fill:none;stroke:#a8a4ff;stroke-width:2;stroke-dasharray:6 6;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrowPurple)}.rule{stroke:#29465e;stroke-width:1}
   </style>
 </defs>
-<rect width="1600" height="1000" rx="24" fill="url(#bg)"/>
-<text x="64" y="72" class="heading" style="font-size:36px">NOVACART</text>
-<text x="64" y="106" class="sub">Incremental Retail Data Engineering Platform · Azure SQL + Databricks Lakehouse</text>
-<rect x="60" y="142" width="1480" height="180" rx="18" fill="#0a1e34" stroke="#244766"/>
-<text x="86" y="176" class="section">01 · SOURCE &amp; ACCESS</text>
-<rect x="90" y="202" width="350" height="86" rx="12" class="card"/>
-<text x="115" y="235" class="cardtitle">Azure SQL Database</text><text x="115" y="261" class="body">Products · Orders · Payments</text>
-<path d="M440 245 H540" class="flow"/>
-<rect x="550" y="202" width="390" height="86" rx="12" class="card"/>
-<text x="575" y="235" class="cardtitle">Lakehouse Federation</text><text x="575" y="261" class="body">Governed access to source tables</text>
-<rect x="1010" y="202" width="480" height="86" rx="12" fill="#171f4a" stroke="#7d8dff" stroke-width="2"/>
-<text x="1035" y="235" class="cardtitle">Processing Control Tables</text><text x="1035" y="261" class="body">Watermarks · Run metadata · Progress</text>
-<path d="M745 288 V365" class="flow"/>
-<rect x="60" y="350" width="1480" height="240" rx="18" fill="#0a1e34" stroke="#244766"/>
-<text x="86" y="384" class="section">02 · DATABRICKS LAKEHOUSE — MEDALLION PROCESSING</text>
-<rect x="90" y="414" width="400" height="126" rx="14" class="bronze"/>
-<text x="118" y="449" class="cardtitle" style="fill:#ffc77c">BRONZE</text><text x="118" y="480" class="body">Incremental source ingestion</text><text x="118" y="506" class="body">Raw Delta tables · ingestion metadata</text>
-<path d="M490 477 H590" class="flow"/>
-<rect x="600" y="414" width="400" height="126" rx="14" class="silver"/>
-<text x="628" y="449" class="cardtitle">SILVER</text><text x="628" y="480" class="body">Cleaning · deduplication · quality handling</text><text x="628" y="506" class="body">Incremental Delta MERGE</text>
-<path d="M1000 477 H1100" class="flow"/>
-<rect x="1110" y="414" width="380" height="126" rx="14" class="gold"/>
-<text x="1138" y="449" class="cardtitle" style="fill:#ffe58a">GOLD</text><text x="1138" y="480" class="body">Business transformations</text><text x="1138" y="506" class="body">Impacted entities · analytical outputs</text>
-<path d="M1250 288 V332 H1250 V350" class="dash"/>
-<path d="M1260 414 V400 H1240 V322" class="dash"/>
-<rect x="60" y="620" width="1480" height="230" rx="18" fill="#0a1e34" stroke="#244766"/>
-<text x="86" y="654" class="section">03 · ANALYTICS &amp; CONSUMPTION</text>
-<path d="M1300 540 V682 H260 V710" class="flow"/>
-<path d="M1300 682 H650 V710" class="flow"/>
-<path d="M1300 682 H1040 V710" class="flow"/>
-<path d="M1300 682 H1370 V710" class="flow"/>
-<rect x="90" y="710" width="330" height="104" rx="12" class="out"/>
-<text x="114" y="744" class="cardtitle">Orders Information</text><text x="114" y="771" class="body">Current-state order analytics</text><text x="114" y="793" class="small">Order and payment context</text>
-<rect x="470" y="710" width="330" height="104" rx="12" class="out"/>
-<text x="494" y="744" class="cardtitle">Orders SCD Type 2</text><text x="494" y="771" class="body">Historical order versions</text><text x="494" y="793" class="small">Change history</text>
-<rect x="850" y="710" width="330" height="104" rx="12" class="out"/>
-<text x="874" y="744" class="cardtitle">Category Performance</text><text x="874" y="771" class="body">GMV · paid amount · completion</text><text x="874" y="793" class="small">Payment failure metrics</text>
-<rect x="1230" y="710" width="260" height="104" rx="12" class="out"/>
-<text x="1254" y="744" class="cardtitle">Volume Snapshots</text><text x="1254" y="771" class="body">Latest + dated exports</text><text x="1254" y="793" class="small">Parquet</text>
-<rect x="60" y="878" width="1480" height="74" rx="14" fill="#102c45" stroke="#39708f"/>
-<text x="88" y="908" class="cardtitle" style="font-size:18px">04 · ORCHESTRATION &amp; OPERATIONS</text>
-<text x="88" y="932" class="body">Databricks Job: Bronze → Silver → Gold → Dashboard task → SQL alert task · Sequential dependencies · Max concurrent runs: 1</text>
-<text x="1535" y="978" text-anchor="end" class="small">Architecture based on repository artifacts; cloud workspace currently decommissioned.</text>
+<rect width="1600" height="1000" rx="26" fill="url(#bg)"/>
+<circle cx="1480" cy="75" r="190" fill="#17415a" opacity=".16"/><circle cx="1450" cy="80" r="120" fill="#347b87" opacity=".08"/>
+<text x="64" y="55" class="eyebrow">DATA PLATFORM / SOLUTION ARCHITECTURE</text>
+<text x="64" y="103" class="title">NOVACART</text>
+<text x="64" y="135" class="subtitle">Incremental retail analytics · Azure SQL + Databricks Lakehouse</text>
+<rect x="1260" y="70" width="275" height="42" rx="21" fill="#123c3c" stroke="#2d8c83"/>
+<circle cx="1284" cy="91" r="5" fill="#5ee1d0"/><text x="1300" y="96" font-size="13" font-weight="700" fill="#aaf3e9">WORKING IMPLEMENTATION</text>
+
+<!-- Source and access -->
+<rect x="56" y="174" width="1488" height="160" rx="18" class="panel"/>
+<text x="82" y="205" class="stage">01 / SOURCE &amp; ACCESS</text>
+<rect x="82" y="224" width="360" height="82" rx="12" class="source"/>
+<rect x="82" y="224" width="5" height="82" rx="2" fill="#70b8e6"/>
+<text x="106" y="253" class="cardTitle">Azure SQL Database</text>
+<text x="106" y="278" class="body">Products · Orders · Payments</text>
+<text x="106" y="296" class="muted">Operational source tables</text>
+<path d="M442 265 H505" class="line"/>
+<rect x="515" y="224" width="380" height="82" rx="12" class="source"/>
+<text x="539" y="253" class="cardTitle">Lakehouse Federation</text>
+<text x="539" y="278" class="body">Governed, federated source access</text>
+<text x="539" y="296" class="muted">Unity Catalog permissions / connectivity</text>
+<path d="M895 265 H958" class="line"/>
+<rect x="968" y="224" width="540" height="82" rx="12" class="control"/>
+<text x="992" y="253" class="cardTitle">Processing Control</text>
+<text x="992" y="278" class="body">Per-entity watermarks · run history · progress</text>
+<text x="992" y="296" class="muted">Coordinates incremental work; not a business-data layer</text>
+
+<!-- Medallion pipeline -->
+<rect x="56" y="356" width="1488" height="286" rx="18" class="panel"/>
+<text x="82" y="389" class="stage">02 / DATABRICKS LAKEHOUSE</text>
+<text x="1510" y="389" text-anchor="end" class="muted">Delta tables · incremental processing</text>
+<rect x="82" y="416" width="420" height="184" rx="14" class="bronze"/>
+<rect x="82" y="416" width="420" height="7" rx="3" fill="#e9a65b"/>
+<text x="108" y="451" font-size="13" font-weight="800" letter-spacing="2" fill="#f5bd7d">LAYER 01</text>
+<text x="108" y="483" class="cardTitle">BRONZE</text>
+<text x="108" y="512" class="body">Incremental source ingestion</text>
+<text x="108" y="536" class="body">Replay-safe Delta MERGE</text>
+<text x="108" y="560" class="body">Source keys + timestamps retained</text>
+<rect x="108" y="574" width="155" height="17" rx="8" fill="#5b3c20"/><text x="185" y="586" text-anchor="middle" class="chip">RAW / TRACEABLE</text>
+
+<path d="M502 508 H568" class="line"/>
+<rect x="578" y="416" width="420" height="184" rx="14" class="silver"/>
+<rect x="578" y="416" width="420" height="7" rx="3" fill="#a9c6d9"/>
+<text x="604" y="451" font-size="13" font-weight="800" letter-spacing="2" fill="#b9d3e3">LAYER 02</text>
+<text x="604" y="483" class="cardTitle">SILVER</text>
+<text x="604" y="512" class="body">Standardize · validate · deduplicate</text>
+<text x="604" y="536" class="body">Incremental Delta MERGE</text>
+<text x="604" y="560" class="body">Clean, conformed entity tables</text>
+<rect x="604" y="574" width="176" height="17" rx="8" fill="#314b60"/><text x="692" y="586" text-anchor="middle" class="chip">QUALITY / CONFORMED</text>
+
+<path d="M998 508 H1064" class="line"/>
+<rect x="1074" y="416" width="434" height="184" rx="14" class="gold"/>
+<rect x="1074" y="416" width="434" height="7" rx="3" fill="#e6c65d"/>
+<text x="1100" y="451" font-size="13" font-weight="800" letter-spacing="2" fill="#f0d978">LAYER 03</text>
+<text x="1100" y="483" class="cardTitle">GOLD</text>
+<text x="1100" y="512" class="body">Business-ready analytical models</text>
+<text x="1100" y="536" class="body">Order-grain sales · payment-grain status</text>
+<text x="1100" y="560" class="body">Impacted-category refresh + history</text>
+<rect x="1100" y="574" width="167" height="17" rx="8" fill="#5a4a22"/><text x="1183" y="586" text-anchor="middle" class="chip">CURATED / REPORTING</text>
+
+<!-- Control relationship, intentionally routed around pipeline -->
+<path d="M1238 306 V338 H292 V405" class="controlLine"/>
+<text x="750" y="332" text-anchor="middle" font-size="11" font-weight="700" fill="#aaa7ff">READ / UPDATE INCREMENTAL STATE AFTER SUCCESSFUL WRITES</text>
+
+<!-- Outputs -->
+<rect x="56" y="664" width="1488" height="176" rx="18" class="panel"/>
+<text x="82" y="696" class="stage">03 / GOLD OUTPUTS &amp; CONSUMPTION</text>
+<path d="M1290 600 V632 H260 V704" class="line"/>
+<path d="M1290 632 H620 V704" class="line"/>
+<path d="M1290 632 H980 V704" class="line"/>
+<path d="M1290 632 H1340 V704" class="line"/>
+
+<rect x="82" y="710" width="340" height="102" rx="12" class="output"/>
+<text x="104" y="741" class="cardTitle" font-size="17">Orders Information</text>
+<text x="104" y="766" class="body">Current-state order analytics</text>
+<text x="104" y="790" class="muted">Order and payment context</text>
+<rect x="442" y="710" width="340" height="102" rx="12" class="output"/>
+<text x="464" y="741" class="cardTitle" font-size="17">Orders SCD Type 2</text>
+<text x="464" y="766" class="body">Selected attribute history</text>
+<text x="464" y="790" class="muted">Versioned order records</text>
+<rect x="802" y="710" width="340" height="102" rx="12" class="output"/>
+<text x="824" y="741" class="cardTitle" font-size="17">Category Performance</text>
+<text x="824" y="766" class="body">GMV · paid amount · payment outcomes</text>
+<text x="824" y="790" class="muted">Commercial and payment metrics</text>
+<rect x="1162" y="710" width="346" height="102" rx="12" class="output"/>
+<text x="1184" y="741" class="cardTitle" font-size="17">Volume Snapshots</text>
+<text x="1184" y="766" class="body">Latest + timestamped exports</text>
+<text x="1184" y="790" class="muted">Parquet in Databricks Volumes</text>
+
+<!-- Orchestration footer -->
+<rect x="56" y="862" width="1488" height="88" rx="16" fill="#171e3d" stroke="#5557a4" stroke-width="1.5"/>
+<circle cx="88" cy="894" r="12" fill="#2c2e61" stroke="#a8a4ff"/><path d="M83 894 l4 4 7 -8" fill="none" stroke="#c6c4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="112" y="892" font-size="16" font-weight="800" fill="#f2f1ff">ORCHESTRATION</text>
+<text x="112" y="918" class="body">Databricks Job · sequential task dependencies · max concurrent runs: 1</text>
+<g transform="translate(760 881)">
+  <rect width="130" height="39" rx="9" fill="#352d22" stroke="#e9a65b"/><text x="65" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#ffd09a">BRONZE</text>
+  <path d="M130 19 H153" class="line"/>
+  <rect x="163" width="130" height="39" rx="9" fill="#263b4c" stroke="#a9c6d9"/><text x="228" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#d4e6f3">SILVER</text>
+  <path d="M293 19 H316" class="line"/>
+  <rect x="326" width="130" height="39" rx="9" fill="#40381f" stroke="#e6c65d"/><text x="391" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#f6e08a">GOLD</text>
+  <path d="M456 19 H479" class="line"/>
+  <rect x="489" width="155" height="39" rx="9" fill="#123545" stroke="#3d91ad"/><text x="566" y="24" text-anchor="middle" font-size="12" font-weight="700" fill="#a6e6f4">DASHBOARD / ALERT</text>
+</g>
+<text x="1530" y="978" text-anchor="end" font-size="11" fill="#7895ad">Conceptual architecture from preserved repository artifacts · original cloud workspace decommissioned for cost control</text>
 </svg>
