@@ -61,6 +61,7 @@ This document records the important design choices represented by the NovaCart n
 - Define a deterministic ordering when timestamp and primary key are both used.
 - Document inclusive/exclusive boundaries and tie handling.
 - Advance the watermark only at the correct success boundary.
+- Bronze uses a Delta MERGE keyed by source primary key plus source change timestamp, so retrying a committed write before checkpoint advancement does not insert the same source version twice. Null cursor fields are rejected.
 - Make retries safe, and add a lookback or reconciliation strategy where the source's change semantics require it.
 - Test equal timestamps, late updates, and failures between data writes and checkpoint updates.
 
@@ -113,8 +114,10 @@ These are recommended tests, not a claim that every case has already been exerci
 **Engineering requirements**
 - Identify impacted orders from order changes and payment changes.
 - Identify orders affected by product changes through the relevant product-to-order relationship.
-- Derive the complete impacted category set from affected records.
-- Define what happens when an entity is deleted or changes category.
+- Derive impacted categories from both the pre-merge Gold rows and the new Gold delta.
+- Recompute the old and new categories after the order-grain Gold merge; remove an obsolete category row when no orders remain.
+- Calculate payment failure rate at payment grain.
+- Gold checkpoints are maintained independently for orders, products, and payments and track Silver processing-control timestamps/run IDs, not a shared source business timestamp. Gold identifies current Silver rows tagged with unprocessed Silver run IDs, allowing it to detect source changes even when the source timestamp is late or behind a prior business timestamp.
 - Use periodic full reconciliation or a controlled full rebuild as a recovery option when practical.
 
 **Validation evidence to capture**
@@ -131,8 +134,11 @@ These are recommended tests, not a claim that every case has already been exerci
 - Gives dashboard authors a clearer reporting surface than repeated joins across operational entities.
 
 **Trade-offs**
-- Join cardinality matters: multiple payment records per order can multiply order rows if aggregation rules are not explicit.
-- Product attributes may change after an order is created; the model must define whether it reports current product attributes or order-time attributes.
+- The published Gold fact is one row per order. Payments are aggregated by order before joining, so payment multiplicity cannot multiply order rows.
+- `paid_amount` includes only payment rows whose normalized status is one of `PAID`, `SUCCESS`, `SUCCEEDED`, `SUCCESSFUL`, `COMPLETED`, or `SETTLED`. Confirm these values against the source system and extend the mapping only with an explicit business decision.
+- `payment_id` and `payment_status` describe the latest payment record; they are not a replacement for payment-grain analysis.
+- Category payment-failure rate is calculated from individual Silver payment rows, not from the one-row-per-order Gold fact.
+- Product attributes represent the current Silver product state, not necessarily the product values at order time.
 - Monetary metrics require validated numeric types and documented treatment of refunds, partial payments, and invalid values.
 
 **Validation evidence to capture**
