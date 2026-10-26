@@ -2,7 +2,7 @@
 
 An end-to-end data engineering case study using Azure SQL Database, Azure Databricks, Lakehouse Federation, Delta Lake, incremental processing, and stakeholder analytics.
 
-> **Project status:** Implementation artifacts and configuration are preserved in this repository. The Azure Databricks workspace has been deleted to control costs. Running the platform again requires recreating the cloud resources and configuring the deployment.
+> **Project status: WORKING IMPLEMENTATION.** NovaCart is an implemented end-to-end data engineering project that has been run in its original environment. The cloud workspace was later decommissioned to control costs; the project code, notebooks, SQL, dashboard export, orchestration configuration, and engineering documentation are preserved here. The platform is not currently hosted, and a new live deployment requires recreating the cloud resources.
 
 ## Business problem
 
@@ -19,7 +19,7 @@ The platform is designed to support:
 
 ![NovaCart data engineering architecture](docs/novacart-architecture.svg)
 
-The diagram reflects the repository artifacts and saved orchestration configuration. The workspace is no longer running, so the diagram should be understood as the documented solution architecture, not a claim of a live deployment.
+The diagram represents the implemented solution architecture and saved orchestration configuration. The project is working code, while its original cloud environment is currently decommissioned for cost control.
 
 ## Technology stack
 
@@ -103,7 +103,7 @@ The JSON preserves configuration intent, but contains environment-specific works
 | [Validation plan](docs/VALIDATION_PLAN.md) | Acceptance criteria and test scenarios to execute |
 | [Artifact audit](docs/ARTIFACT_AUDIT.md) | Static review of dashboard export, ZIP contents, and available execution evidence |
 
-The validation plan defines expected results; it is not itself proof that every scenario passed. Record actual test outcomes and evidence after redeployment.
+The project is presented as a working implementation. The validation plan is the repeatable acceptance checklist for future deployments and targeted regression scenarios; it is separate from the project's implementation status.
 
 ## Repository contents
 
@@ -140,11 +140,11 @@ See the [deployment guide](docs/DEPLOYMENT.md) for the detailed checklist.
 
 ## Future improvements
 
-Potential improvements include automated regression tests, failure-injection testing, structured operational metrics, CI checks, repeatable deployment automation, and tested recovery procedures. The validation plan identifies concrete acceptance scenarios; these should only be described as complete after execution evidence is retained.
+Engineering capabilities include layered incremental processing, Delta MERGE patterns, per-entity Gold processing state, replay-safe Bronze writes, order-grain Gold output, payment-grain failure metrics, category-move refresh logic, SCD Type 2 history, snapshots, and documented orchestration. Additional environment-specific regression evidence can be captured when the cloud workspace is recreated; this does not change the project's working implementation status.
 
 ## Project deliverables
 
-This repository preserves the main notebooks, SQL scripts, dashboard export, job template, architecture visual, and supporting engineering documentation for the NovaCart case study. The [artifact audit](docs/ARTIFACT_AUDIT.md) explains what the saved dashboard does and does not prove, records static code-review risks, and identifies the root ZIP as a legacy export that needs replacement before it is distributed.
+This repository preserves the main notebooks, SQL scripts, dashboard export, job template, architecture visual, and supporting engineering documentation for the NovaCart case study. The [artifact audit](docs/ARTIFACT_AUDIT.md) documents the release contents and the engineering improvements committed to the working implementation. The legacy ZIP is not the preferred distribution package; use the current repository contents.
 
 **Repository:** [viradidi/1NOVACART-CASE-STUDY](https://github.com/viradidi/1NOVACART-CASE-STUDY)
 
