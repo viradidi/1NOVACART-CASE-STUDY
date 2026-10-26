@@ -11,7 +11,7 @@
       "task_key": "bronze_work",
       "run_if": "ALL_SUCCESS",
       "notebook_task": {
-        "notebook_path": "/Workspace/Users/isaiahnyakundi87@gmail.com/1NOVACART-CASE-STUDY/bronze_work",
+        "notebook_path": "/Workspace/Shared/1NOVACART-CASE-STUDY/bronze_work",
         "source": "WORKSPACE"
       },
       "timeout_seconds": 0,
@@ -28,7 +28,7 @@
       ],
       "run_if": "ALL_SUCCESS",
       "notebook_task": {
-        "notebook_path": "/Workspace/Users/isaiahnyakundi87@gmail.com/1NOVACART-CASE-STUDY/silver_work",
+        "notebook_path": "/Workspace/Shared/1NOVACART-CASE-STUDY/silver_work",
         "source": "WORKSPACE"
       },
       "timeout_seconds": 0,
@@ -45,7 +45,7 @@
       ],
       "run_if": "ALL_SUCCESS",
       "notebook_task": {
-        "notebook_path": "/Workspace/Users/isaiahnyakundi87@gmail.com/1NOVACART-CASE-STUDY/gold_work",
+        "notebook_path": "/Workspace/Shared/1NOVACART-CASE-STUDY/gold_work",
         "source": "WORKSPACE"
       },
       "timeout_seconds": 0,
@@ -67,7 +67,7 @@
             "page_attachment": {}
           }
         },
-        "dashboard_id": "01f1d081ce7919a3a391402267422297"
+        "dashboard_id": "REPLACE_WITH_DASHBOARD_ID"
       },
       "timeout_seconds": 0,
       "email_notifications": {},
@@ -84,14 +84,10 @@
       "run_if": "ALL_SUCCESS",
       "sql_task": {
         "alert": {
-          "alert_id": "8a3bcec3-5258-4afb-91aa-447580114e4a",
-          "subscriptions": [
-            {
-              "user_name": "isaiahnyakundi87@gmail.com"
-            }
-          ]
+          "alert_id": "REPLACE_WITH_ALERT_ID",
+          "subscriptions": []
         },
-        "warehouse_id": "df749165beae47fc"
+        "warehouse_id": "REPLACE_WITH_WAREHOUSE_ID"
       },
       "timeout_seconds": 0,
       "email_notifications": {},
@@ -102,5 +98,6 @@
   "queue": {
     "enabled": true
   },
-  "performance_target": "PERFORMANCE_OPTIMIZED"
+  "performance_target": "PERFORMANCE_OPTIMIZED",
+  "_README": "Deployment template only. Replace notebook paths, dashboard ID, alert ID, and warehouse ID with values from the target workspace before importing."
 }
