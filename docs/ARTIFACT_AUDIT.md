@@ -10,7 +10,7 @@
 | Dashboard data sources | Consistent with the documented Gold model | The export points to `adb_datatocrunchproject.gold_schema.orders_information` and `category_performance` |
 | Dashboard runtime evidence | Not verified | The JSON does not prove the dashboard was successfully rendered or queried after export |
 | Notebook execution evidence | Not present in the checked-in notebooks | Code cells have no saved output results |
-| ZIP archive | Compared against checked-in notebooks | It contains the corrected Python exports; Bronze and Silver corrections plus the Gold payment-timestamp correction have now been applied to the GitHub notebooks. The archive still is not a complete release package. |
+| ZIP archive | Compared against checked-in notebooks | Corrected exports were compared; code-level mitigations for Gold payment grain, category moves, Bronze replay, checkpoints, and snapshot paths are committed. The archive is not a complete release package. |
 | Job configuration | Sanitized to a redeployment template | Personal recipient and old workspace-specific resource IDs have been replaced with placeholders |
 
 ## 1. Dashboard artifact review
@@ -28,7 +28,7 @@ The page definition contains date, category, and order-status filters; KPI count
 
 - This is a **dashboard configuration export**, not a screenshot of a populated dashboard.
 - The saved workspace has been decommissioned. We cannot verify current query execution, rendered values, filter interactions, refresh behavior, or alert delivery from this file alone.
-- KPI calculations depend on the correctness and grain of the Gold tables. In particular, order-level GMV and paid amount can be wrong if the Gold pipeline arbitrarily reduces multiple payment rows to one row per order. Validate the model before treating the displayed values as reconciled business metrics.
+- The Gold notebook now aggregates successful/settled payment amounts before joining at order grain, and computes payment failure rate at payment grain. Confirm the successful-status vocabulary against the source after redeployment; static changes are not runtime reconciliation evidence.
 - The category-performance dataset uses a generic row-count measure in its dataset definition; validate each category-table column and metric against the actual Gold schema after redeployment.
 
 ### Evidence required for a portfolio claim
@@ -45,7 +45,7 @@ The repository-root file [1NOVACART-CASE-STUDY.zip](../1NOVACART-CASE-STUDY.zip)
 - No `NovaCart Sales & Payments Overview.lvdash.json` entry.
 - No current `*.ipynb` notebooks or the current `docs/` engineering documentation in the archive listing.
 
-The ZIP is **not a self-contained copy of the entire current GitHub project** because it does not include the dashboard JSON or current engineering documentation, and it includes `.git/` metadata that does not need to be distributed. The code comparison is now complete. The Bronze export contains timestamp-precision normalization and a null-primary-key watermark branch; the Silver export carries the prior Bronze run ID alongside its timestamp watermark; and the Gold export filters changed payments using `processed_at`, whereas the checked-in notebook used `updated_at`. Those corrections have been applied to the GitHub notebooks. The export also contains an invalid `collect()["mx"]` pattern in the product section; the checked-in notebook has been corrected to `collect()[0]["mx"]` rather than copying that defect. A clean release archive should exclude `.git/` and include the dashboard and current documentation.
+The ZIP is **not a self-contained copy of the entire current GitHub project** because it does not include the dashboard JSON or current engineering documentation, and it includes `.git/` metadata that does not need to be distributed. The code comparison is complete. The export contained Bronze timestamp normalization and null-primary-key watermark handling, Silver run-ID metadata, and a Gold payment timestamp correction. Those corrections were applied. Further code-level mitigations now address one-row-per-order Gold grain, payment-level failure rate, old/new category refresh after product moves, replay-safe Bronze MERGE, per-entity Gold processing checkpoints, and standardized snapshot paths. The export also contained an invalid `collect()["mx"]` pattern in the product section; the notebook uses `collect()[0]["mx"]` instead. A clean release archive should exclude `.git/` and include the dashboard and current documentation.
 
 ## 3. Notebook evidence and static review
 
@@ -57,7 +57,7 @@ The current repository contains all three notebooks:
 
 The checked-in notebooks contain no saved code-cell outputs. They preserve implementation code, but they do not by themselves prove successful execution or expected row counts.
 
-Static review identified these correctness risks to address before claiming production-grade incremental correctness:
+Static review led to the following code-level mitigations. All remain subject to runtime validation after redeployment:
 
 1. **Bronze append/checkpoint boundary — code mitigation applied:** Bronze now MERGEs on the source primary key plus source change timestamp, preserving distinct versions while avoiding duplicate inserts after a failure between the data write and checkpoint update. Null primary keys or watermark timestamps are rejected before writing. This is a static code change; controlled failure/replay validation is still pending.
 2. **Source catalog name:** Bronze references `project-datatocruch_catalog`. Confirm that this is the exact foreign-catalog name in the intended environment; do not rename it blindly if it is the actual configured name.
@@ -75,5 +75,5 @@ The repository's `novacart_job.json` has been changed into a **redeployment temp
 
 1. Complete a targeted review of the remaining Gold grain, category-move, and Bronze append/checkpoint risks listed above; then prepare a clean ZIP that includes the corrected notebooks, dashboard, and docs while excluding `.git/`.
 2. Redeploy only when you are ready to incur cloud costs.
-3. Run the validation scenarios for payment multiplicity, category moves, replay after partial failure, and Gold reconciliation.
+3. Run the validation scenarios for payment multiplicity, category moves, replay after partial failure, per-entity checkpoints, and Gold reconciliation.
 4. Save actual run/query evidence and a rendered dashboard screenshot before describing those checks as passed.
