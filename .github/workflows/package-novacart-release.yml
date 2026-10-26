@@ -39,7 +39,7 @@ jobs:
           ET.parse(root / "docs" / "novacart-architecture.svg")
           print("SVG OK: docs/novacart-architecture.svg")
           readme = (root / "README.md").read_text(encoding="utf-8")
-          for target in re.findall(r"\\]\((docs/[^)]+)\\)", readme):
+          for target in re.findall(r"\]\((docs/[^)]+)\)", readme):
               if not (root / target).is_file():
                   raise SystemExit(f"Broken README link: {target}")
           print("README documentation links OK")
