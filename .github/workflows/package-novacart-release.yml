@@ -1,0 +1,31 @@
+name: Package NovaCart release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build clean release archive
+        run: |
+          zip -r NovaCart-Release.zip . \
+            -x ".git/*" \
+               "1NOVACART-CASE-STUDY.zip" \
+               "NovaCart-Release.zip"
+
+      - name: Upload release archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: NovaCart-Release
+          path: NovaCart-Release.zip
+          if-no-files-found: error
+          retention-days: 30
