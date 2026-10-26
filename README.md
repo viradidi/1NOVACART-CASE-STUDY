@@ -17,9 +17,17 @@ The platform is designed to support:
 
 ## Architecture
 
-![NovaCart data engineering architecture](docs/novacart-architecture.svg)
+### End-to-end platform overview
 
-The diagram represents the implemented solution architecture and saved orchestration configuration. The project is working code, while its original cloud environment is currently decommissioned for cost control.
+![NovaCart end-to-end data pipeline architecture](docs/novacart-end-to-end-architecture.svg)
+
+This presentation diagram gives the high-level view: operational sources, ingestion, the Databricks Lakehouse medallion layers, orchestration, analytics, alerts, and cross-cutting governance. The diagram is a solution overview; individual connectors and services should be read alongside the implementation details below.
+
+### Detailed processing flow
+
+![NovaCart detailed medallion architecture](docs/novacart-architecture.svg)
+
+The detailed diagram focuses on incremental control state, Bronze/Silver/Gold responsibilities, Gold outputs, and the saved Databricks job flow. The project is a working implementation that ran in its original environment; the cloud workspace was later decommissioned for cost control.
 
 ## Technology stack
 
@@ -95,7 +103,8 @@ The JSON preserves configuration intent, but contains environment-specific works
 
 | Document | Purpose |
 |---|---|
-| [Architecture diagram](docs/novacart-architecture.svg) | High-level solution components and data flow |
+| [End-to-end architecture visual](docs/novacart-end-to-end-architecture.svg) | Portfolio-level platform overview, sources, processing, orchestration, analytics, and governance |
+| [Detailed architecture diagram](docs/novacart-architecture.svg) | Incremental control state, medallion layers, Gold outputs, and job flow |
 | [Deployment guide](docs/DEPLOYMENT.md) | Steps and prerequisites to recreate the environment |
 | [Data dictionary](docs/DATA_DICTIONARY.md) | Tables, fields, metrics, and data-quality considerations |
 | [Engineering decisions](docs/ENGINEERING_DECISIONS.md) | Rationale, trade-offs, and correctness conditions |
