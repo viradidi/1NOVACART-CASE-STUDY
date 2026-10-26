@@ -37,7 +37,7 @@ After redeployment, retain a screenshot of the rendered dashboard with synthetic
 
 ## 2. ZIP archive inspection
 
-The repository-root file [1NOVACART-CASE-STUDY.zip](../1NOVACART-CASE-STUDY.zip) is approximately 66 KB and contains 85 ZIP entries. The archive listing shows:
+The repository-root file [1NOVACART-CASE-STUDY.zip](../1NOVACART-CASE-STUDY.zip) is approximately 66 KB and contains 85 ZIP entries. The archive includes `bronze_work.py`, `silver_work.py`, and `gold_work.py` exports. The user clarified that these are the corrected notebook exports downloaded after earlier pushed code did not work correctly. **Do not label those exports stale solely because they are `.py` files rather than `.ipynb` notebooks.** Their code must be compared with the current GitHub notebooks before deciding which version is authoritative. The archive listing also shows:
 
 - A full `1NOVACART-CASE-STUDY/.git/` directory, including object packs, refs, branch names, logs, and Git metadata.
 - Python exports named `bronze_work.py`, `silver_work.py`, and `gold_work.py`.
@@ -45,7 +45,7 @@ The repository-root file [1NOVACART-CASE-STUDY.zip](../1NOVACART-CASE-STUDY.zip)
 - No `NovaCart Sales & Payments Overview.lvdash.json` entry.
 - No current `*.ipynb` notebooks or the current `docs/` engineering documentation in the archive listing.
 
-This means the ZIP is **not a self-contained copy of the current GitHub project** and does not include the dashboard export. Including `.git/` also exposes repository metadata that does not need to be distributed in a project bundle. Treat the root ZIP as a legacy workspace/Git export, not the release package. Use the individual files and folders in the GitHub repository as the current source of truth until a clean archive is prepared.
+The ZIP is **not a self-contained copy of the entire current GitHub project** because it does not include the dashboard JSON or current engineering documentation, and it includes `.git/` metadata that does not need to be distributed. However, it may contain the corrected implementation code. Do not replace or discard its notebook exports until their code is compared against the GitHub notebooks. A clean release archive should preserve the corrected notebook code while excluding `.git/` and including the dashboard and current documentation.
 
 ## 3. Notebook evidence and static review
 
@@ -73,7 +73,7 @@ The repository's `novacart_job.json` has been changed into a **redeployment temp
 
 ## Next evidence milestone
 
-1. Prepare a clean ZIP from the current repository that includes the dashboard and docs but excludes `.git/`.
+1. Compare the ZIP's corrected `.py` notebook exports with the GitHub `.ipynb` notebooks; retain the corrected implementation, then prepare a clean ZIP that also includes the dashboard and docs and excludes `.git/`.
 2. Redeploy only when you are ready to incur cloud costs.
 3. Run the validation scenarios for payment multiplicity, category moves, replay after partial failure, and Gold reconciliation.
 4. Save actual run/query evidence and a rendered dashboard screenshot before describing those checks as passed.
