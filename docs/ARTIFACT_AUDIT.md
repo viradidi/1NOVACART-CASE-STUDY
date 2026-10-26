@@ -10,7 +10,7 @@
 | Dashboard data sources | Consistent with the documented Gold model | The export points to `adb_datatocrunchproject.gold_schema.orders_information` and `category_performance` |
 | Dashboard runtime evidence | Not verified | The JSON does not prove the dashboard was successfully rendered or queried after export |
 | Notebook execution evidence | Not present in the checked-in notebooks | Code cells have no saved output results |
-| ZIP archive | Stale / unsuitable as the current project package | It includes a `.git/` directory and old Python exports, but not the current dashboard JSON or current repository documentation |
+| ZIP archive | Compared against checked-in notebooks | It contains the corrected Python exports; Bronze and Silver corrections plus the Gold payment-timestamp correction have now been applied to the GitHub notebooks. The archive still is not a complete release package. |
 | Job configuration | Sanitized to a redeployment template | Personal recipient and old workspace-specific resource IDs have been replaced with placeholders |
 
 ## 1. Dashboard artifact review
@@ -45,7 +45,7 @@ The repository-root file [1NOVACART-CASE-STUDY.zip](../1NOVACART-CASE-STUDY.zip)
 - No `NovaCart Sales & Payments Overview.lvdash.json` entry.
 - No current `*.ipynb` notebooks or the current `docs/` engineering documentation in the archive listing.
 
-The ZIP is **not a self-contained copy of the entire current GitHub project** because it does not include the dashboard JSON or current engineering documentation, and it includes `.git/` metadata that does not need to be distributed. However, it may contain the corrected implementation code. Do not replace or discard its notebook exports until their code is compared against the GitHub notebooks. A clean release archive should preserve the corrected notebook code while excluding `.git/` and including the dashboard and current documentation.
+The ZIP is **not a self-contained copy of the entire current GitHub project** because it does not include the dashboard JSON or current engineering documentation, and it includes `.git/` metadata that does not need to be distributed. The code comparison is now complete. The Bronze export contains timestamp-precision normalization and a null-primary-key watermark branch; the Silver export carries the prior Bronze run ID alongside its timestamp watermark; and the Gold export filters changed payments using `processed_at`, whereas the checked-in notebook used `updated_at`. Those corrections have been applied to the GitHub notebooks. The export also contains an invalid `collect()["mx"]` pattern in the product section; the checked-in notebook has been corrected to `collect()[0]["mx"]` rather than copying that defect. A clean release archive should exclude `.git/` and include the dashboard and current documentation.
 
 ## 3. Notebook evidence and static review
 
@@ -73,7 +73,7 @@ The repository's `novacart_job.json` has been changed into a **redeployment temp
 
 ## Next evidence milestone
 
-1. Compare the ZIP's corrected `.py` notebook exports with the GitHub `.ipynb` notebooks; retain the corrected implementation, then prepare a clean ZIP that also includes the dashboard and docs and excludes `.git/`.
+1. Complete a targeted review of the remaining Gold grain, category-move, and Bronze append/checkpoint risks listed above; then prepare a clean ZIP that includes the corrected notebooks, dashboard, and docs while excluding `.git/`.
 2. Redeploy only when you are ready to incur cloud costs.
 3. Run the validation scenarios for payment multiplicity, category moves, replay after partial failure, and Gold reconciliation.
 4. Save actual run/query evidence and a rendered dashboard screenshot before describing those checks as passed.
