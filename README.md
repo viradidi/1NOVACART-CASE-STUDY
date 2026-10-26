@@ -101,6 +101,7 @@ The JSON preserves configuration intent, but contains environment-specific works
 | [Engineering decisions](docs/ENGINEERING_DECISIONS.md) | Rationale, trade-offs, and correctness conditions |
 | [Operations runbook](docs/OPERATIONS_RUNBOOK.md) | Failure investigation, recovery, and reconciliation |
 | [Validation plan](docs/VALIDATION_PLAN.md) | Acceptance criteria and test scenarios to execute |
+| [Artifact audit](docs/ARTIFACT_AUDIT.md) | Static review of dashboard export, ZIP contents, and available execution evidence |
 
 The validation plan defines expected results; it is not itself proof that every scenario passed. Record actual test outcomes and evidence after redeployment.
 
@@ -111,7 +112,7 @@ The validation plan defines expected results; it is not itself proof that every 
 - `NovaCart Sales & Payments Overview.lvdash.json` — exported dashboard artifact.
 - `novacart_job.json` — saved Databricks Job configuration.
 - `docs/` — architecture and engineering documentation.
-- `1NOVACART-CASE-STUDY.zip` — packaged project artifacts.
+- `1NOVACART-CASE-STUDY.zip` — clean project bundle containing the current notebooks, SQL scripts, dashboard export, job template, README, and docs; it excludes `.git/` metadata.
 
 ## Redeployment guide
 
@@ -143,7 +144,7 @@ Potential improvements include automated regression tests, failure-injection tes
 
 ## Project deliverables
 
-This repository preserves the main notebooks, SQL scripts, dashboard export, job configuration, architecture visual, and supporting engineering documentation for the NovaCart case study.
+This repository preserves the main notebooks, SQL scripts, dashboard export, job template, architecture visual, and supporting engineering documentation for the NovaCart case study. The [artifact audit](docs/ARTIFACT_AUDIT.md) explains what the saved dashboard does and does not prove, and records the static code-review risks to validate before making runtime claims.
 
 **Repository:** [viradidi/1NOVACART-CASE-STUDY](https://github.com/viradidi/1NOVACART-CASE-STUDY)
 
