@@ -15,6 +15,36 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Validate project artifacts
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          root = Path(".")
+          notebooks = [
+              root / "bronze_work.ipynb",
+              root / "silver_work.ipynb",
+              root / "gold_work.ipynb",
+          ]
+          json_files = [
+              root / "novacart_job.json",
+              root / "NovaCart Sales & Payments Overview.lvdash.json",
+          ]
+          for path in notebooks + json_files:
+              json.loads(path.read_text(encoding="utf-8"))
+              print(f"JSON OK: {path}")
+          ET.parse(root / "docs" / "novacart-architecture.svg")
+          print("SVG OK: docs/novacart-architecture.svg")
+          readme = (root / "README.md").read_text(encoding="utf-8")
+          for target in re.findall(r"\\]\((docs/[^)]+)\\)", readme):
+              if not (root / target).is_file():
+                  raise SystemExit(f"Broken README link: {target}")
+          print("README documentation links OK")
+          PY
+
       - name: Build clean release archive
         run: |
           zip -r NovaCart-Release.zip . \
