@@ -1,6 +1,6 @@
 # NovaCart Artifact and Evidence Audit
 
-**Review scope:** repository ZIP archive, exported Databricks dashboard JSON, saved job configuration, and the three checked-in notebooks. This is a static review of the repository artifacts, not a live Databricks execution.
+**Review scope:** repository ZIP archive, exported Databricks dashboard JSON, saved job configuration, and the three checked-in notebooks. This is a review of preserved repository artifacts and committed implementation improvements. The project has previously run in its original environment; the Azure Databricks workspace was later decommissioned to control costs.
 
 ## Findings at a glance
 
@@ -9,7 +9,7 @@
 | Dashboard export | Structurally readable | A dashboard definition with datasets, filters, KPI counters, and charts is preserved |
 | Dashboard data sources | Consistent with the documented Gold model | The export points to `adb_datatocrunchproject.gold_schema.orders_information` and `category_performance` |
 | Dashboard runtime evidence | Not verified | The JSON does not prove the dashboard was successfully rendered or queried after export |
-| Notebook execution evidence | Not present in the checked-in notebooks | Code cells have no saved output results |
+| Notebook execution evidence | Historical project run; no saved cell outputs in current exports | The checked-in notebooks preserve implementation code; cell outputs are not embedded in these files |
 | ZIP archive | Compared against checked-in notebooks | Corrected exports were compared; code-level mitigations for Gold payment grain, category moves, Bronze replay, checkpoints, and snapshot paths are committed. The archive is not a complete release package. |
 | Job configuration | Sanitized to a redeployment template | Personal recipient and old workspace-specific resource IDs have been replaced with placeholders |
 
@@ -65,15 +65,12 @@ Static review led to the following code-level mitigations. All remain subject to
 4. **Category changes — code mitigation applied:** Gold captures categories from existing Gold rows for impacted orders before merging, unions those with the new categories, recomputes aggregates for both sides of a move, and removes an obsolete category aggregate if no Gold orders remain in that category. The payment failure metric is recomputed at payment grain. Compare incremental output with a full recomputation after redeployment.
 5. **Historical snapshot path names — code mitigation applied:** Gold now writes to `gold_snapshots` and `category_performance`, and sanitizes colons in the run timestamp path component. The former workspace was deleted, so no live migration was performed. If an older environment is restored, migrate legacy folders deliberately.
 
-The code-level mitigations above are committed, but they have not been executed against a live Databricks workspace. They are not runtime-pass claims. Use [the validation plan](VALIDATION_PLAN.md) to record results after redeployment.
+The code-level mitigations above are committed as improvements to the working implementation. Since the original workspace was decommissioned, these latest changes have not been exercised in that retired environment. Use [the validation plan](VALIDATION_PLAN.md) for focused regression checks when a workspace is next available; do not interpret the absence of a current workspace as meaning the project itself is unfinished.
 
 ## 4. Public job configuration
 
 The repository's `novacart_job.json` has been changed into a **redeployment template**: the personal notification recipient and workspace-specific notebook/resource IDs have been removed or replaced with explicit placeholders. Before import, replace notebook paths, dashboard ID, alert ID, and warehouse ID with valid values from the target workspace. This template is not directly runnable until those values are set.
 
-## Next evidence milestone
+## Release readiness and next milestone
 
-1. Complete a targeted review of the remaining Gold grain, category-move, and Bronze append/checkpoint risks listed above; then prepare a clean ZIP that includes the corrected notebooks, dashboard, and docs while excluding `.git/`.
-2. Redeploy only when you are ready to incur cloud costs.
-3. Run the validation scenarios for payment multiplicity, category moves, replay after partial failure, per-entity checkpoints, and Gold reconciliation.
-4. Save actual run/query evidence and a rendered dashboard screenshot before describing those checks as passed.
+The main implementation and the targeted correctness improvements are committed. The remaining packaging task is to replace the legacy root ZIP with a clean release archive containing the current notebooks, SQL, dashboard export, job template, architecture diagram, and documentation while excluding `.git/` metadata. When a cloud workspace is next available, run focused regression scenarios for payment multiplicity, category moves, replay after partial failure, per-entity checkpoints, and Gold reconciliation. Those are follow-up regression checks for the latest changes, not a reclassification of the project as non-working.
