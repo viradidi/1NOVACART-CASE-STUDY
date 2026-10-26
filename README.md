@@ -87,9 +87,22 @@ The JSON preserves configuration intent, but contains environment-specific works
 
 **SCD Type 2:** Historical versions provide change context beyond the current-state view, with additional storage and transformation complexity.
 
-**Impacted-category processing:** Updating only affected categories can reduce repeated work, provided all changes that affect those categories are identified. Periodic reconciliation is a useful safeguard against drift.
+**Impacted-category processing:** Updating only affected categories can reduce repeated work, provided all changes that affect those categories are identified. Reconciliation against a full recomputation is a key validation method.
 
 **Lakehouse Federation:** Direct source access avoids a conventional extraction connector for that access path, but still depends on source availability, permissions, networking, and query performance.
+
+## Documentation and engineering evidence
+
+| Document | Purpose |
+|---|---|
+| [Architecture diagram](docs/novacart-architecture.svg) | High-level solution components and data flow |
+| [Deployment guide](docs/DEPLOYMENT.md) | Steps and prerequisites to recreate the environment |
+| [Data dictionary](docs/DATA_DICTIONARY.md) | Tables, fields, metrics, and data-quality considerations |
+| [Engineering decisions](docs/ENGINEERING_DECISIONS.md) | Rationale, trade-offs, and correctness conditions |
+| [Operations runbook](docs/OPERATIONS_RUNBOOK.md) | Failure investigation, recovery, and reconciliation |
+| [Validation plan](docs/VALIDATION_PLAN.md) | Acceptance criteria and test scenarios to execute |
+
+The validation plan defines expected results; it is not itself proof that every scenario passed. Record actual test outcomes and evidence after redeployment.
 
 ## Repository contents
 
@@ -97,7 +110,7 @@ The JSON preserves configuration intent, but contains environment-specific works
 - SQL scripts — source table definitions and load examples.
 - `NovaCart Sales & Payments Overview.lvdash.json` — exported dashboard artifact.
 - `novacart_job.json` — saved Databricks Job configuration.
-- `docs/novacart-architecture.svg` — portfolio architecture visual.
+- `docs/` — architecture and engineering documentation.
 - `1NOVACART-CASE-STUDY.zip` — packaged project artifacts.
 
 ## Redeployment guide
@@ -114,6 +127,8 @@ The platform is not currently running because the Azure Databricks workspace was
 8. Recreate the job from `novacart_job.json`, replacing resource IDs and paths.
 9. Validate an initial load, subsequent incremental runs, data quality, and business metrics before enabling any schedule.
 
+See the [deployment guide](docs/DEPLOYMENT.md) for the detailed checklist.
+
 ## Security and cost controls
 
 - Never commit credentials, access tokens, or private connection strings.
@@ -124,11 +139,11 @@ The platform is not currently running because the Azure Databricks workspace was
 
 ## Future improvements
 
-Potential next steps to strengthen the platform include automated regression tests, explicit source-to-target reconciliation, failure-injection and recovery tests, structured operational metrics, CI checks, repeatable deployment automation, data dictionaries, and documented recovery procedures. These are improvement opportunities rather than claims that every capability is already implemented.
+Potential improvements include automated regression tests, failure-injection testing, structured operational metrics, CI checks, repeatable deployment automation, and tested recovery procedures. The validation plan identifies concrete acceptance scenarios; these should only be described as complete after execution evidence is retained.
 
 ## Project deliverables
 
-This repository preserves the main notebooks, SQL scripts, dashboard export, job configuration, and architecture documentation for the NovaCart case study.
+This repository preserves the main notebooks, SQL scripts, dashboard export, job configuration, architecture visual, and supporting engineering documentation for the NovaCart case study.
 
 **Repository:** [viradidi/1NOVACART-CASE-STUDY](https://github.com/viradidi/1NOVACART-CASE-STUDY)
 
