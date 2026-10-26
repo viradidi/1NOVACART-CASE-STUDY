@@ -112,7 +112,7 @@ The validation plan defines expected results; it is not itself proof that every 
 - `NovaCart Sales & Payments Overview.lvdash.json` — exported dashboard artifact.
 - `novacart_job.json` — saved Databricks Job configuration.
 - `docs/` — architecture and engineering documentation.
-- `1NOVACART-CASE-STUDY.zip` — clean project bundle containing the current notebooks, SQL scripts, dashboard export, job template, README, and docs; it excludes `.git/` metadata.
+- `1NOVACART-CASE-STUDY.zip` — legacy Databricks/Git export; see [the artifact audit](docs/ARTIFACT_AUDIT.md). It contains `.git/` metadata and does not include the current dashboard export or current documentation, so do not use it as the current project bundle.
 
 ## Redeployment guide
 
@@ -144,7 +144,7 @@ Potential improvements include automated regression tests, failure-injection tes
 
 ## Project deliverables
 
-This repository preserves the main notebooks, SQL scripts, dashboard export, job template, architecture visual, and supporting engineering documentation for the NovaCart case study. The [artifact audit](docs/ARTIFACT_AUDIT.md) explains what the saved dashboard does and does not prove, and records the static code-review risks to validate before making runtime claims.
+This repository preserves the main notebooks, SQL scripts, dashboard export, job template, architecture visual, and supporting engineering documentation for the NovaCart case study. The [artifact audit](docs/ARTIFACT_AUDIT.md) explains what the saved dashboard does and does not prove, records static code-review risks, and identifies the root ZIP as a legacy export that needs replacement before it is distributed.
 
 **Repository:** [viradidi/1NOVACART-CASE-STUDY](https://github.com/viradidi/1NOVACART-CASE-STUDY)
 
