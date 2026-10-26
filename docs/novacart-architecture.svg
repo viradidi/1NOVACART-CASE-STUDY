@@ -34,9 +34,9 @@
 <text x="449" y="296" class="muted">Unity Catalog permissions / connectivity</text>
 
 <rect x="980" y="224" width="528" height="82" rx="12" class="control"/>
-<text x="992" y="253" class="cardTitle">Processing Control</text>
+<text x="1004" y="253" class="cardTitle">Processing Control</text>
 <text x="1004" y="278" class="body">Per-entity watermarks · run history · progress</text>
-<text x="992" y="296" class="muted">Coordinates incremental work; not a business-data layer</text>
+<text x="1004" y="296" class="muted">State is maintained alongside the data layers</text>
 
 <!-- Medallion pipeline -->
 <rect x="56" y="356" width="1488" height="286" rx="18" class="panel"/><path d="M605 306 V405" class="line"/>
