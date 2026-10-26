@@ -2,7 +2,7 @@
 
 This guide explains how to recreate the NovaCart case-study environment from the artifacts in this repository.
 
-> **Current status:** The Azure Databricks workspace used during development has been deleted to control costs. This repository contains saved notebooks, SQL scripts, dashboard/job exports, and architecture documentation, but it does not provide a live hosted environment. Cloud resource names, IDs, permissions, networking, and credentials must be configured for the target environment.
+> **Project status: WORKING IMPLEMENTATION.** NovaCart was implemented and run in its original Azure Databricks environment. That workspace was later deleted to control costs, so the project is not currently hosted. This guide covers restoring the cloud environment if a live demonstration or regression run is needed. Cloud resource names, IDs, permissions, networking, and credentials must be configured for the target environment.
 
 ## 1. Deployment overview
 
@@ -115,7 +115,7 @@ Run them in this order:
 - Confirm that expected Volume snapshots are written.
 - Run again without changes and check that the results remain consistent.
 
-The checks above are deployment acceptance criteria, not a claim that they have been rerun in a new workspace.
+These are deployment acceptance checks for a newly recreated environment. They complement the existing working implementation and are intended to confirm environment-specific behavior after redeployment.
 
 ## 8. Restore dashboard and alert
 
