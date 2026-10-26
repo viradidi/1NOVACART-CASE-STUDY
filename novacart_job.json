@@ -98,6 +98,5 @@
   "queue": {
     "enabled": true
   },
-  "performance_target": "PERFORMANCE_OPTIMIZED",
-  "_README": "Deployment template only. Replace notebook paths, dashboard ID, alert ID, and warehouse ID with values from the target workspace before importing."
+  "performance_target": "PERFORMANCE_OPTIMIZED"
 }
