@@ -234,3 +234,80 @@ Before calling the workflow operationally ready, demonstrate that:
 - Alerting and run-history evidence are accessible to the responsible operator.
 
 These are readiness criteria. They should only be marked complete after the corresponding tests have been run and evidence retained.
+
+## 15. Recovery decision matrix
+
+Use this matrix to choose the next action. It is a decision aid, not proof that a particular write is idempotent.
+
+| Observed state | Safe next action | Do not do |
+|---|---|---|
+| Task failed before any target write and checkpoint is unchanged | Fix the cause, then retry the task | Move the checkpoint forward |
+| Target write may have committed but control update did not | Inspect target keys and source interval; reconcile before retry | Assume the task was atomic end to end |
+| Target and control state both advanced | Validate the processed interval and downstream effects before closing the incident | Treat a successful control row as proof of correct business output |
+| Control advanced but expected target data is missing | Stop downstream progression; identify the skipped interval and perform a bounded, reviewed backfill | Reset the watermark to an arbitrary value |
+| Duplicate or conflicting target keys are found | Preserve affected rows, identify the merge key and source ordering, then apply a tested correction | Delete duplicates without retaining evidence |
+| Source timestamp semantics are uncertain | Confirm the source update contract and compare against an authoritative source extract | Claim complete change capture from timestamp filtering alone |
+
+The NovaCart pipeline uses timestamp-plus-primary-key cursor logic and Delta MERGE patterns. These mechanisms reduce repeated processing, but they do not by themselves prove end-to-end exactly-once delivery or guarantee capture of updates whose source timestamps do not advance.
+
+## 16. Observability and evidence to retain
+
+For each production-like run, retain enough metadata to reconstruct what was read, written, and published. Use the actual deployed table and column names; the exported artifacts may need environment-specific updates.
+
+| Area | Evidence to capture | Why it matters |
+|---|---|---|
+| Orchestration | Job run ID, task key, attempt, start/end time, outcome | Establishes execution order and failure location |
+| Source read | Entity, cursor lower/upper bounds, source query time, selected-row count | Defines the input interval |
+| Bronze | Rows selected/merged, target count or affected keys, control checkpoint before/after | Detects partial writes and cursor drift |
+| Silver | Input count, accepted/rejected count, duplicate-key count, merge outcome | Makes quality and deduplication behavior visible |
+| Gold | Impacted order/category set, output row counts, metric totals | Explains incremental refresh scope and business effect |
+| SCD Type 2 | Business key, versions closed/inserted, current-row invariant check | Protects historical correctness |
+| Publication | Snapshot path, associated run, schema, row count, publication timestamp | Confirms the published artifact matches the run |
+| Consumption | Dashboard query result, alert evaluation and delivery outcome | Verifies the final consumer-facing result |
+
+Avoid logging credentials, access tokens, full connection strings, or unnecessary customer-level payloads. Prefer counts, hashes, masked identifiers, and a small approved sample where detailed investigation is necessary.
+
+## 17. Bounded backfill procedure
+
+Use a bounded backfill when evidence shows that a source interval or set of keys was missed. A backfill should be reproducible and independently reconcilable.
+
+1. Identify the affected source entity and business keys, if known.
+2. Establish the earliest and latest source positions that must be reconsidered. Record the timestamp and primary-key boundaries.
+3. Export or otherwise preserve the current checkpoint and affected target rows before changing state.
+4. Confirm how the Bronze MERGE handles an existing primary key with the same timestamp and a changed payload. Do not assume that rereading the row will update it.
+5. Choose the narrowest supported replay or correction method. If the notebook has no safe replay mechanism, implement and test one before changing production state.
+6. Reprocess the bounded interval or explicit keys in a controlled run.
+7. Verify source-to-Bronze coverage, Silver key uniqueness and quality outcomes, and the affected Gold metrics.
+8. Confirm the checkpoint now represents the intended successfully processed source position.
+9. Record the reason, interval, code/configuration version, run IDs, reconciliation evidence, and operator approval.
+
+If the source cannot provide a reliable change timestamp, use an agreed alternative such as CDC, a source change log, periodic key-level reconciliation, or a reviewed full refresh. A lookback window is only a mitigation when its size and source-lateness assumptions are explicit.
+
+## 18. Release and recovery gates
+
+Before enabling a redeployed schedule or declaring a recovery complete, require evidence for the relevant gates:
+
+- **Configuration:** workspace-specific notebook paths, catalog/schema names, connection references, permissions, compute settings, and job resource IDs have been reviewed.
+- **Input contract:** source primary keys, timestamp behavior, nullability, update semantics, delete handling, and schema evolution are understood.
+- **Write safety:** retry behavior has been tested for failure before write, after target commit, and before control/checkpoint update.
+- **Data quality:** duplicate handling, invalid casts, null business keys, and quarantine counts match the documented rules.
+- **Incremental correctness:** timestamp ties, late-arriving changes, and same-key/same-timestamp payload changes have explicit tests.
+- **Business correctness:** order-grain and payment-grain measures reconcile to independently calculated expected results.
+- **Historical correctness:** SCD Type 2 tests verify the expected effective intervals and exactly one current version per business key.
+- **Consumer readiness:** Gold queries, dashboard references, alert routing, and snapshot publication have been tested.
+- **Evidence:** retain test inputs, expected outputs, run identifiers, validation results, and known limitations.
+
+A green orchestration status is necessary but not sufficient. Close an incident only after the affected data and downstream consumers have been reconciled.
+
+## 19. NovaCart-specific implementation cautions
+
+Keep these limitations visible during redeployment and incident response:
+
+- The saved Databricks job definition contains workspace-specific paths and resource identifiers; replace and validate them in the target workspace.
+- Verify the Bronze source catalog identifier against the deployed catalog configuration before running ingestion.
+- The source setup SQL includes destructive table-reset behavior. Do not run it against an environment containing data that must be retained; separate test reset from deployment provisioning.
+- Monetary source fields represented as strings require explicit numeric conversion and invalid-value handling. Reconcile rejected or unparseable amounts rather than silently treating them as zero.
+- Validate the Bronze MERGE match condition for updates that retain the same source timestamp. If the match includes both primary key and timestamp, a changed payload with an unchanged pair may not be updated by a not-matched-only insert path.
+- Test the no-change Silver run path. Confirm how its control record/run identifier is consumed by Gold when no Silver data rows are emitted for that run.
+- The current workspace was decommissioned. This runbook describes procedures for a future redeployment; it is not evidence that current live monitoring, alerting, or recovery tests are active.
+
