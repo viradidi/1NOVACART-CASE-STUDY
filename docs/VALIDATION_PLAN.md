@@ -90,3 +90,108 @@ NovaCart's validation is ready for review when:
 3. Incremental outputs reconcile against a full recomputation for controlled test data.
 4. Watermark, replay, and late-update behavior is demonstrated or its limitations are clearly documented.
 5. The README links to the actual evidence and does not claim unexecuted tests passed.
+## Test design and measurement rules
+
+### Build controlled fixtures
+
+Use deterministic fixtures with stable business keys and hand-calculated expected results. Include:
+- One order with a single payment, one with multiple payments across successful, failed, and pending statuses, and one with no payment.
+- Two orders referencing the same product.
+- A product category move that leaves the old category empty.
+- Duplicate business keys, null keys where permitted, null timestamps, and equal timestamps with different primary keys.
+- A payload update that retains the same key and timestamp, if the source permits it.
+- Invalid, null, negative (where permitted), and high-precision monetary values.
+- A tracked SCD2 change, exact replay, and out-of-order effective-time change.
+
+Record expected Bronze, Silver, Gold, and history outcomes before execution. Never use production customer data for these fixtures.
+
+### Quantitative acceptance criteria
+
+| Check | Acceptance criterion |
+|---|---|
+| Business-key uniqueness | Zero unintended duplicate keys in current-state Silver and order-grain Gold |
+| Required keys | Zero null values for required business keys |
+| Order grain | Exactly one Gold order row per eligible order key |
+| Payment aggregation | Paid amount equals the hand-calculated sum for documented successful statuses |
+| Payment failure rate | Numerator and denominator use an explicit payment-status set; zero-denominator behavior is defined |
+| Category movement | Old and new category totals match independent recomputation; empty-category behavior is explicit |
+| SCD2 current rows | Exactly one current version per business key after a tracked change; exact replay creates no unintended version |
+| Incremental reconciliation | Incremental Gold and full recomputation match, or each exception is explained and approved |
+| Checkpoint integrity | Checkpoint never moves beyond the highest source position whose required target processing succeeded |
+| Snapshot integrity | Schema and row count match intended Gold output and publication is associated with the correct successful run |
+
+Do not choose arbitrary percentage tolerances for financial metrics. Define decimal precision, rounding mode, currency handling, and acceptable rounding differences before testing.
+
+## Additional edge-case and failure-injection tests
+
+These scenarios are planned tests, not evidence of execution until results are recorded.
+
+| ID | Scenario | Procedure | Expected result | Evidence to retain |
+|---|---|---|---|---|
+| VAL-19 | Null source cursor | Introduce a null source timestamp | Explicit reject, fallback, or exception; never silently lost | Source row, query result, quality outcome |
+| VAL-20 | Same key/timestamp, changed payload | Change payload without changing primary key or timestamp | Establish whether current MERGE updates or ignores the payload; document contract and mitigation | Before/after payload, merge result, target row |
+| VAL-21 | Hard delete | Delete a source row where supported | Detect only if implemented change capture supports it; otherwise record limitation and reconciliation requirement | Source and target state |
+| VAL-22 | No-change Silver run | Run Silver with no new Bronze rows | Control metadata and Gold selection remain consistent; no false acknowledgement or duplicate output | Control rows and output counts |
+| VAL-23 | Silver write/control boundary | Fail after Silver write but before processing-control acknowledgement | Retry behavior is understood; no un reconciled missing or duplicate output | Failure point, target/control state, retry |
+| VAL-24 | Gold write/control boundary | Fail after Gold write but before Gold control acknowledgement | Rerun neither skips affected entities nor creates unintended duplicates | Gold rows, control state, reconciliation |
+| VAL-25 | SCD2 out-of-order change | Process a change with effective time earlier than current version | Explicit late-arriving-dimension policy is followed; otherwise case is flagged/rejected | Version timeline and policy outcome |
+| VAL-26 | Zero payment denominator | Use fixture with no payments in the denominator status set | Explicit null/zero/not-applicable policy; no divide-by-zero | Input statuses and calculated metric |
+| VAL-27 | Financial precision | Include fractional amounts near rounding boundaries | Conversion and aggregation follow documented DECIMAL precision and rounding | Inputs, typed values, expected/actual sums |
+| VAL-28 | Empty impacted category | Move the last associated product/order out of a category | Old category removed or retained as zero per contract; no stale total | Impact set and category output |
+| VAL-29 | Independent entity progress | Fail one entity while another succeeds, where orchestration permits | Successful entity does not incorrectly acknowledge the failed entity | Per-entity control rows and task results |
+| VAL-30 | Snapshot publication failure | Fail publication after Gold succeeds | Previous valid snapshot remains identifiable; incomplete output is not labelled latest successful | Paths, timestamps, run IDs |
+
+## Assertion examples
+
+Translate these examples to the actual deployed catalog, schema, and column names. They express validation intent and are not executable against an unspecified environment.
+
+**One current row per business key**
+
+~~~sql
+SELECT business_key, COUNT(*) AS current_rows
+FROM silver_dimension
+WHERE is_current = TRUE
+GROUP BY business_key
+HAVING COUNT(*) <> 1;
+~~~
+
+Expected result: zero rows for keys expected to have a current dimension record.
+
+**One order-grain row per order**
+
+~~~sql
+SELECT order_id, COUNT(*) AS rows_per_order
+FROM gold_orders
+GROUP BY order_id
+HAVING COUNT(*) <> 1;
+~~~
+
+Expected result: zero rows.
+
+**No unintended duplicate current-state keys**
+
+~~~sql
+SELECT business_key, COUNT(*) AS row_count
+FROM silver_current_entity
+GROUP BY business_key
+HAVING COUNT(*) > 1;
+~~~
+
+Expected result: zero rows, after applying the documented current-state filter if the table intentionally stores history.
+
+**Incremental-versus-full reconciliation**
+
+Compare both directions using complete business keys and all contractually defined measures. A FULL OUTER JOIN with null-safe comparisons is preferable to comparing total row counts alone; record missing keys and per-measure differences separately.
+
+## Evidence quality and sign-off
+
+A reviewable validation result includes:
+1. Exact repository commit and deployed configuration version.
+2. Fixture definition or safe reference to it.
+3. Test procedure and failure-injection point, where applicable.
+4. Expected and actual results, including key-level or metric-level comparisons.
+5. Job/task run identifiers and timestamps with timezone.
+6. Query result, log excerpt, or screenshot that exposes no secrets or unnecessary personal data.
+7. Final status, reviewer, unresolved limitations, and follow-up issue.
+
+Keep code-review conclusions separate from runtime outcomes. Static inspection can identify risks or show that a test is defined; it cannot establish that a scenario passed in a live Databricks environment. Because the original workspace was decommissioned, these additional scenarios remain planned until executed after redeployment.
