@@ -47,8 +47,8 @@
 <text x="444" y="451" font-size="13" font-weight="800" letter-spacing="2" fill="#f5bd7d">LAYER 01</text>
 <text x="444" y="483" class="cardTitle">BRONZE</text>
 <text x="444" y="512" class="body">Incremental source ingestion</text>
-<text x="444" y="536" class="body">Replay-safe Delta MERGE</text>
-<text x="444" y="560" class="body">Source keys + timestamps retained</text>
+<text x="444" y="536" class="body">Timestamp + PK incremental reads</text>
+<text x="444" y="560" class="body">Source keys + timestamps tracked</text>
 <rect x="444" y="574" width="155" height="17" rx="8" fill="#5b3c20"/><text x="185" y="586" text-anchor="middle" class="chip">RAW / TRACEABLE</text>
 
 <path d="M720 508 H780" class="line"/>
@@ -73,7 +73,7 @@
 
 <!-- Control relationship, intentionally routed around pipeline -->
 <path d="M1244 306 V344 H570 V405" class="controlLine"/><path d="M1244 344 H940 V405" class="controlLine"/><path d="M1244 344 H1334 V405" class="controlLine"/>
-<text x="750" y="332" text-anchor="middle" font-size="11" font-weight="700" fill="#aaa7ff">READ / UPDATE PER-ENTITY STATE AFTER SUCCESSFUL WRITES</text>
+<text x="750" y="332" text-anchor="middle" font-size="11" font-weight="700" fill="#aaa7ff">READ / ADVANCE ENTITY WATERMARK AFTER SUCCESSFUL PROCESSING</text>
 
 <!-- Outputs -->
 <rect x="56" y="664" width="1488" height="176" rx="18" class="panel"/>
