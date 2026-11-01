@@ -111,8 +111,13 @@ The JSON preserves configuration intent, but contains environment-specific works
 | [Operations runbook](docs/OPERATIONS_RUNBOOK.md) | Failure investigation, recovery, and reconciliation |
 | [Validation plan](docs/VALIDATION_PLAN.md) | Acceptance criteria and test scenarios to execute |
 | [Artifact audit](docs/ARTIFACT_AUDIT.md) | Static review of dashboard export, ZIP contents, and available execution evidence |
+| [Release package guide](docs/RELEASE_PACKAGE.md) | How to retrieve the clean, CI-generated project archive |
 
 The project is presented as a working implementation. The validation plan is the repeatable acceptance checklist for future deployments and targeted regression scenarios; it is separate from the project's implementation status.
+
+## Release package and CI evidence
+
+The repository includes a GitHub Actions workflow that validates the exported notebook/job/dashboard JSON, checks the detailed architecture SVG and README documentation links, and builds a clean `NovaCart-Release.zip` artifact. The latest recorded packaging run completed successfully: [view the successful GitHub Actions run](https://github.com/viradidi/1NOVACART-CASE-STUDY/actions/runs/41314575447). Download the `NovaCart-Release` artifact from that run; GitHub retains workflow artifacts for 30 days. This is packaging and structural validation evidence, not a live execution of the Databricks pipeline. See the [release package guide](docs/RELEASE_PACKAGE.md).
 
 ## Repository contents
 
