@@ -149,7 +149,7 @@ See the [deployment guide](docs/DEPLOYMENT.md) for the detailed checklist.
 
 ## Future improvements
 
-Engineering capabilities include layered incremental processing, Delta MERGE patterns, per-entity Gold processing state, replay-safe Bronze writes, order-grain Gold output, payment-grain failure metrics, category-move refresh logic, SCD Type 2 history, snapshots, and documented orchestration. Additional environment-specific regression evidence can be captured when the cloud workspace is recreated; this does not change the project's working implementation status.
+Engineering capabilities include layered incremental processing, Delta MERGE patterns, per-entity Gold processing state, watermark-driven Bronze ingestion, order-grain Gold output, payment-grain failure metrics, category-move refresh logic, SCD Type 2 history, snapshots, and documented orchestration. Bronze replay and same-timestamp update behavior should be validated against the source-system change contract before describing the ingestion path as fully replay-safe. Additional environment-specific regression evidence can be captured when the cloud workspace is recreated; this does not change the project's working implementation status.
 
 ## Project deliverables
 
@@ -158,3 +158,18 @@ This repository preserves the main notebooks, SQL scripts, dashboard export, job
 **Repository:** [viradidi/1NOVACART-CASE-STUDY](https://github.com/viradidi/1NOVACART-CASE-STUDY)
 
 **Author:** Isaiah Nyakundi
+
+
+## Interview walkthrough
+
+A useful technical walkthrough of NovaCart is:
+
+1. Explain why the platform uses Bronze, Silver, and Gold rather than transforming operational tables directly into reporting tables.
+2. Walk through the timestamp-plus-primary-key watermark strategy and explain the assumptions it makes about source change timestamps, ties, late-arriving changes, and checkpoint advancement.
+3. Explain how Delta MERGE is used in the processing layers, including the keys and change-detection rules that determine whether a row is inserted or updated.
+4. Describe how Silver quality handling and deduplication protect downstream business models.
+5. Explain the grain of each Gold output, especially why order-level reporting and payment-level failure metrics must not be mixed without aggregation.
+6. Walk through the SCD Type 2 order-history model and the tests needed to preserve one current version per business key.
+7. Explain how impacted-category processing handles a product moving between categories, and how a full recomputation can be used for reconciliation.
+
+The strongest interview discussion is not just the technology list; it is the correctness conditions, trade-offs, failure cases, and validation strategy behind each design.
