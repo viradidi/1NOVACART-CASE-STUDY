@@ -244,6 +244,43 @@ These are recommended tests, not a claim that every case has already been exerci
 - Recreate the environment only for a planned validation or demonstration.
 - Capture genuine test and dashboard evidence during that run.
 
+## 12. Decision boundaries and alternatives
+
+The choices above are workload-specific trade-offs, not universal rules. In an interview or design review, explain what would make you keep or replace each choice.
+
+| Area | Chosen approach | Alternative to consider | When the alternative may be better |
+|---|---|---|---|
+| Source access | Lakehouse Federation | ADF or another managed extraction path into durable landing storage | When source isolation, replayable raw history, predictable workload control, or decoupling from source availability is more important than direct access |
+| Incremental progress | Timestamp plus primary-key cursor and processing-control metadata | Native CDC, database change tracking, log-based capture, or periodic full extracts | When deletes, before/after images, high update volume, or strict change completeness are required |
+| Current-state transforms | Delta MERGE | Append-only change history followed by downstream compaction, or full snapshot replacement | When immutable audit history is the primary requirement, or source volumes are small enough that simpler rebuilds are safer |
+| Gold refresh | Impacted-entity recomputation | Full Gold rebuild | When correctness and simplicity outweigh compute cost, or impact detection is not yet proven complete |
+| Historical order state | SCD Type 2 | Event sourcing or periodic snapshots | When every source event and its causal order must be retained, or the business needs point-in-time snapshots at a different grain |
+| Published exports | Volume-based Parquet snapshots | Governed Delta tables or a managed serving layer | When concurrent readers, schema evolution, transactional consistency, access governance, or serving performance become primary requirements |
+
+### Guarantees, assumptions, and non-goals
+
+- **A watermark is a progress marker, not proof of source completeness.** Completeness depends on source change semantics, cursor ordering, late-arrival behavior, and delete capture.
+- **A Delta MERGE is a transactional table operation, not an end-to-end exactly-once guarantee.** Correct replay behavior also depends on stable keys, deterministic source selection, checkpoint sequencing, and retry behavior across task boundaries.
+- **A successful upstream task does not prove every downstream business metric is correct.** Gold needs grain-aware reconciliation against trusted source or independently computed results.
+- **SCD Type 2 preserves only the attributes and changes explicitly tracked by its implementation.** It is not a complete event log and does not automatically reconstruct source history that was never observed.
+- **Sequential job execution reduces overlap for this configured job.** It does not coordinate separate jobs, external writers, or manual notebook runs that modify the same tables.
+- **Decommissioning the workspace is a cost decision.** It does not invalidate the owner's report that the original project ran, but it means a reviewer cannot independently reproduce the current environment without redeployment.
+
+### Senior-level review questions
+
+A reviewer should be able to get clear, implementation-grounded answers to these questions:
+
+1. What source contract makes the timestamp-plus-key cursor complete, and how are deletes and late updates represented?
+2. What is the exact idempotency key for each layer, and what happens if data commits but its control record does not?
+3. How is the one-current-row-per-key invariant enforced and tested in Silver?
+4. How are old and new dimensional values both included when a product changes category?
+5. How do you prove incremental Gold output equals a full recomputation for a fixed input snapshot?
+6. What is the SCD2 effective-time policy for out-of-order changes and replayed input?
+7. Which operations are safe to rerun after a partial job failure, and which require repair or reconciliation?
+8. What evidence is available from the historical run, and what would need to be recaptured after redeployment?
+
+These questions separate a sound architectural pattern from a guarantee that must be demonstrated by tests and operational evidence.
+
 ## Summary
 
 NovaCart demonstrates design patterns for layered data processing, incremental state, merge-based transformations, historical modeling, impacted-entity analytics, and scheduled orchestration. Their correctness depends on explicit data contracts, watermark semantics, idempotency, reconciliation, and recovery tests. The saved artifacts document the intended implementation; production-level guarantees should only be claimed when supported by repeatable evidence.
