@@ -71,6 +71,20 @@ The code-level mitigations above are committed as improvements to the working im
 
 The repository's `novacart_job.json` has been changed into a **redeployment template**: the personal notification recipient and workspace-specific notebook/resource IDs have been removed or replaced with explicit placeholders. Before import, replace notebook paths, dashboard ID, alert ID, and warehouse ID with valid values from the target workspace. This template is not directly runnable until those values are set.
 
+## 5. Automated release packaging
+
+The repository now includes [a GitHub Actions packaging workflow](../.github/workflows/package-novacart-release.yml) and [release-package instructions](RELEASE_PACKAGE.md). On pushes to `main`, or manual dispatch, the workflow:
+
+- Parses the three notebook exports, job JSON, and dashboard JSON as JSON.
+- Parses `docs/novacart-architecture.svg`.
+- Checks README links targeting `docs/`.
+- Builds `NovaCart-Release.zip`, excluding the legacy root ZIP, the output ZIP itself, and files under `.git/`.
+- Uploads the archive as a `NovaCart-Release` Actions artifact for 30 days.
+
+This provides an automated clean-package path without requiring a Databricks workspace. It does **not** execute Bronze/Silver/Gold, validate SQL semantics, verify both architecture SVGs, render or query the dashboard, or prove that the packaged pipeline runs in Databricks. The workflow checks only the architecture SVG named above; the end-to-end SVG is included in the archive but is not currently XML-validated by this workflow. The workflow also uploads a temporary Actions artifact rather than committing a release ZIP to the repository.
+
+The legacy `1NOVACART-CASE-STUDY.zip` remains in the repository as a historical export; it is excluded from the generated clean package. To distribute the current project, use the latest successful `Package NovaCart release` workflow artifact, not the legacy ZIP. Confirm an actual successful workflow run before describing a particular release artifact as generated and available.
+
 ## Release readiness and next milestone
 
-The main implementation and the targeted correctness improvements are committed. The remaining packaging task is to replace the legacy root ZIP with a clean release archive containing the current notebooks, SQL, dashboard export, job template, architecture diagram, and documentation while excluding `.git/` metadata. When a cloud workspace is next available, run focused regression scenarios for payment multiplicity, category moves, replay after partial failure, per-entity checkpoints, and Gold reconciliation. Those are follow-up regression checks for the latest changes, not a reclassification of the project as non-working.
+The main implementation, targeted correctness improvements, and automated clean-package workflow are committed. The legacy root ZIP remains for historical reference, but the workflow excludes it and packages the current repository contents into a downloadable Actions artifact. The remaining release step is operational: confirm a successful packaging run and retrieve its artifact when needed. When a cloud workspace is next available, run focused regression scenarios for payment multiplicity, category moves, replay after partial failure, per-entity checkpoints, and Gold reconciliation. Those are follow-up regression checks for the latest changes, not a reclassification of the project as non-working.
