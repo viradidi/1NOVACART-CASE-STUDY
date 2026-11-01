@@ -194,3 +194,124 @@ When a future deployment is available, add a short record here or in a separate 
 - Dashboard screenshots using synthetic or approved data.
 
 Until that evidence exists, describe the project as a documented, redeployable case study with saved implementation artifacts—not as a currently running cloud service.
+
+## 13. Environment configuration and portability
+
+Maintain a small deployment configuration record for each environment. Avoid editing notebook logic independently in multiple places.
+
+| Setting | Example value | Deployment rule |
+|---|---|---|
+| Workspace | Target Databricks workspace | Record workspace URL/name; never assume old workspace IDs remain valid |
+| Source foreign catalog | Environment-specific catalog | Verify the exact catalog and schema against the live connection |
+| Processing catalog | Environment-specific catalog | Use one reviewed value consistently across notebooks and SQL |
+| Bronze/Silver/Gold schemas | Layer-specific schema names | Create explicitly and verify grants |
+| Source connection | Approved federation connection | Use managed identity/approved credentials; never commit secrets |
+| Snapshot Volume | Target catalog/schema/Volume | Create and test permissions before Gold publication |
+| Job/task paths | Target workspace notebook paths | Replace exported paths and validate every task reference |
+| Dashboard/alert/warehouse | New workspace resource IDs | Recreate and record new IDs; do not reuse stale export IDs |
+| Notifications | Approved operational recipients | Remove personal or obsolete subscriptions |
+
+Before the first run, perform a repository-wide configuration review for hard-coded catalog names, schema names, Volume paths, workspace paths, and resource IDs. The notebooks and exported job definition are implementation artifacts from the original environment, not a parameterized deployment package. Record each required change and validate it in the target workspace.
+
+### Catalog and source-name verification
+
+The notebook artifacts contain environment-specific catalog identifiers. In particular, verify the Bronze source catalog reference against the actual Lakehouse Federation foreign catalog and verify that the processing catalog is the intended Unity Catalog catalog. Do not assume similarly named catalog strings are interchangeable. Confirm the source tables are visible to the job's execution identity before running any write task.
+
+## 14. Safe source database provisioning
+
+The source DDL includes destructive reset behavior. Treat it as a test-fixture reset script, not a repeatable production deployment migration.
+
+Recommended sequence:
+
+1. Review the SQL script and identify every DROP, TRUNCATE, DELETE, and CREATE statement.
+2. Confirm the target database and environment before executing any destructive statement.
+3. Use a disposable database for the portfolio fixture.
+4. Separate schema provisioning from test-data reset so that a routine deployment does not erase existing data.
+5. Prefer versioned, reviewed migrations and non-destructive create/alter operations for persistent environments.
+6. Load synthetic fixture data and validate primary/foreign-key relationships, timestamp columns, and monetary types.
+7. Capture the source schema version and fixture identifier used for the run.
+
+Do not run the reset script against a database containing data that must be retained. If the source schema is changed, update the data dictionary, source contract, notebooks, and validation fixtures together.
+
+## 15. Deployment sequence with gates
+
+Use these gates to avoid scheduling a workflow before its dependencies and semantics have been verified.
+
+| Gate | Required checks | Proceed only when |
+|---|---|---|
+| D0 — Cost and scope | Resource group, region, budget, auto-termination, cleanup plan | Cost owner and disposable scope are clear |
+| D1 — Source | Tables, keys, timestamps, types, fixture data, source permissions | Source contract and expected rows are verified |
+| D2 — Federation | Connection, authentication, network path, catalog visibility | Job identity can read all required source objects |
+| D3 — Unity Catalog | Processing catalog, layer schemas, Volume, grants | Required read/write/create permissions are tested |
+| D4 — Notebook portability | Paths, catalog references, schema names, parameters | No stale workspace-specific references remain |
+| D5 — Layer execution | Bronze, then Silver, then Gold; inspect each output | Each layer's acceptance checks pass before the next |
+| D6 — Consumer artifacts | Snapshot, dashboard queries, alert condition | Consumer outputs match validated Gold data |
+| D7 — Orchestration | Job paths, task types, dependencies, concurrency, queueing, notifications | Manual end-to-end run and recovery tests pass |
+| D8 — Schedule | Schedule, timeout, notifications, budget alerts | Owner explicitly approves ongoing execution |
+
+If a gate fails, stop at that gate. Do not compensate by manually advancing checkpoints or suppressing downstream task failures.
+
+## 16. First-run and incremental-run procedure
+
+For the first deployment, preserve a clear boundary between initial population and incremental processing:
+
+1. Record the source fixture identifier and baseline row counts.
+2. Confirm the initial watermark behavior for each entity. Establish how null/uninitialized watermarks are represented and handled.
+3. Run Bronze and validate selected source keys against landed keys.
+4. Run Silver and validate required keys, deduplication, accepted/rejected records, and typed values.
+5. Run Gold and validate order grain, payment measures, category metrics, and SCD2 current/history rows.
+6. Record the final control state for each entity and layer.
+7. Add one controlled insert and one update with a source timestamp greater than the saved cursor; rerun the layers in dependency order.
+8. Validate timestamp ties, same-key/same-timestamp payload changes, and late-arriving changes according to the source contract.
+9. Compare incremental Gold with an independent full recomputation on the same fixture.
+10. Only after these checks pass, configure the scheduled job.
+
+A successful task status is not sufficient by itself. Retain key-level and metric-level reconciliation results.
+
+## 17. Redeployment-specific implementation checks
+
+Resolve these known questions before treating a redeployed environment as production-like:
+
+- **Bronze MERGE semantics:** Inspect the actual merge condition and matched clauses. If matching uses both primary key and source timestamp and the implementation only inserts unmatched rows, a changed payload with an unchanged key/timestamp may not update the target. Test this explicitly.
+- **Silver no-change behavior:** Confirm how Silver records processing success when no Bronze rows are emitted, and how Gold consumes that control record. Ensure the resulting run identifier cannot cause a false acknowledgement or skip.
+- **Timestamp completeness:** Confirm every relevant source mutation advances the timestamp. If not, choose CDC, a source change log, or a bounded reconciliation strategy.
+- **Deletes:** Timestamp filtering does not inherently capture hard deletes. Define tombstone/CDC or periodic reconciliation behavior if deletes matter.
+- **Monetary types:** If source amounts are stored as strings, define conversion to an appropriate DECIMAL precision and the handling of invalid, null, negative, and over-precision values.
+- **SCD2 temporal policy:** Define behavior for late-arriving changes, out-of-order effective timestamps, and replayed changes before relying on historical outputs.
+- **Job concurrency:** A job-level maximum of one concurrent run prevents overlapping runs of that job, but does not protect against other jobs or external writers modifying the same targets.
+
+Record each decision in the engineering decisions and validation documents, and retain test evidence for any claim of verified behavior.
+
+## 18. Rollback, cleanup, and cost guardrails
+
+Before deployment, define what can be safely rolled back and what must be preserved:
+
+- Preserve the current control-table state and affected target data before any destructive rebuild or manual correction.
+- Keep the previous known-good notebook/configuration version and record the repository commit deployed.
+- For a failed release, pause the schedule first; determine whether writes committed before deciding to rerun, restore, or rebuild.
+- Do not roll a checkpoint backward or forward without a bounded replay plan and reconciliation.
+- Confirm snapshot consumers and retention requirements before deleting prior outputs.
+- Configure compute auto-termination, job schedules, SQL warehouse start/stop behavior, and budget notifications.
+- After a demonstration, stop compute and remove only the resources explicitly included in the cleanup plan.
+- Verify the Azure resource group and billing view after cleanup; deleting a Databricks workspace alone may not remove all separately provisioned resources.
+
+## 19. Deployment record template
+
+Use this record for each redeployment. Do not include credentials, secret values, or sensitive customer data.
+
+- **Deployment date/time and timezone:**
+- **Repository commit:**
+- **Azure region / resource group:**
+- **Databricks runtime and compute:**
+- **Source database/schema version:**
+- **Foreign catalog / connection identifier (non-secret):**
+- **Processing catalog and layer schemas:**
+- **Volume path:**
+- **Notebook paths and job definition version:**
+- **Dashboard / alert / warehouse IDs:**
+- **Validation run IDs and results:**
+- **Known limitations / deviations:**
+- **Cost guardrails and cleanup owner:**
+- **Evidence location:**
+
+Do not populate this template with invented deployment details. The original workspace is decommissioned; a new deployment record should be completed only after the environment is actually recreated.
