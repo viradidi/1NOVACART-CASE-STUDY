@@ -27,8 +27,11 @@ def render_job(
     if not workspace_root.startswith("/"):
         raise ValueError("workspace_root must be an absolute workspace path")
     root = "/" + workspace_root.strip("/")
-    if any(not value.strip() for value in (dashboard_id, alert_id, warehouse_id)):
-        raise ValueError("dashboard_id, alert_id, and warehouse_id are required")
+    if root == "/" or "/../" in f"{root}/":
+        raise ValueError("workspace_root must identify a concrete workspace folder")
+    resource_ids = (dashboard_id, alert_id, warehouse_id)
+    if any(not value.strip() or value.startswith("REPLACE_WITH_") for value in resource_ids):
+        raise ValueError("dashboard_id, alert_id, and warehouse_id must be real target-workspace IDs")
 
     rendered = json.loads(json.dumps(template))
     task_by_key = {task["task_key"]: task for task in rendered.get("tasks", [])}
