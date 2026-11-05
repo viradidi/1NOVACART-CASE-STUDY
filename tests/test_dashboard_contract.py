@@ -25,6 +25,19 @@ class DashboardContractTests(unittest.TestCase):
         }.issubset(measures))
         self.assertNotIn("count", measures)
 
+    def test_every_dashboard_query_references_a_declared_dataset(self):
+        declared = {dataset["name"] for dataset in self.dashboard["datasets"]}
+        for page in self.dashboard.get("pages", []):
+            for layout_item in page.get("layout", []):
+                widget = layout_item.get("widget", {})
+                for query in widget.get("queries", []):
+                    dataset_name = query.get("query", {}).get("datasetName")
+                    self.assertIn(
+                        dataset_name,
+                        declared,
+                        f"Widget {widget.get('name')} references undeclared dataset {dataset_name}",
+                    )
+
     def test_category_table_references_declared_dataset_fields(self):
         dataset = next(item for item in self.dashboard["datasets"] if item["displayName"] == "category_performance")
         declared_dimensions = {item["expr"] for item in dataset["config"]["dimensions"]}
@@ -47,6 +60,8 @@ class DashboardContractTests(unittest.TestCase):
         self.assertTrue(expected_expressions.issubset(measure_expressions))
         self.assertTrue({"total_orders", "Gross_Merchandise_Value", "Total_Paid_Amount", "Average_Payment_Completion_Ratio", "Payment_Failure_Rate"}.issubset(fields))
         self.assertTrue(fields.issubset(declared_dimensions), "Every raw table-widget field must be declared as a dataset dimension.")
+        columns = {column["fieldName"] for column in table["spec"]["encodings"]["columns"]}
+        self.assertEqual(fields, columns)
         self.assertEqual(table["queries"][0]["query"]["datasetName"], dataset["name"])
 
 
