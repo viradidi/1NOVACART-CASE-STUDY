@@ -23,7 +23,7 @@ class DashboardContractTests(unittest.TestCase):
             "category_average_payment_completion",
             "category_payment_failure_rate",
         }.issubset(measures))
-        self.assertNotEqual(measures, {"count"})
+        self.assertNotIn("count", measures)
 
     def test_category_table_references_declared_dataset_fields(self):
         dataset = next(item for item in self.dashboard["datasets"] if item["displayName"] == "category_performance")
