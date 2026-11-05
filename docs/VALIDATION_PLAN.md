@@ -41,8 +41,9 @@ This plan defines repeatable acceptance checks for the NovaCart incremental lake
 The GitHub Actions workflow runs local Spark unit tests against the shared functions imported by the Bronze, Silver, and Gold notebooks. Current automated coverage includes:
 
 - Bronze: initial-load and timestamp-plus-primary-key cursor boundary behavior, including equal-timestamp tie handling.
-- Silver: order/product/payment standardization, latest-record deduplication, numeric conversion, validation, and quarantine splitting.
+- Silver: order/product/payment standardization, latest-record deduplication, locale-aware numeric parsing (US thousands and decimal-comma formats), validation, deterministic quarantine IDs, and quarantine splitting.
 - Gold: successful-payment amount rollup, deterministic latest-payment selection, one-row-per-category aggregation metrics, payment-grain failure rate, and stale-category identification.
+- Retry behavior: stable quarantine IDs ensure a repeated Silver input resolves to the same quarantine identity; notebook-side Delta MERGE prevents duplicate append records.
 - Configuration: dashboard dataset measures/widget references and job-template rendering/validation.
 
 These tests run with local Spark; they do not exercise Databricks Unity Catalog, Lakehouse Federation, Delta transaction behavior, workspace permissions, the actual Databricks Job service, dashboard rendering, or SQL alert delivery. Keep those as live-environment acceptance tests below.
