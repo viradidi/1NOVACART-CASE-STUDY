@@ -2,7 +2,7 @@
 
 An end-to-end data engineering case study using Azure SQL Database, Azure Databricks, Lakehouse Federation, Delta Lake, incremental processing, and stakeholder analytics.
 
-> **Project status: WORKING IMPLEMENTATION.** NovaCart is an implemented end-to-end data engineering project that has been run in its original environment. The cloud workspace was later decommissioned to control costs; the project code, notebooks, SQL, dashboard export, orchestration configuration, and engineering documentation are preserved here. The platform is not currently hosted, and a new live deployment requires recreating the cloud resources.
+> **Project status: WORKING IMPLEMENTATION — OWNER-CONFIRMED SUCCESSFUL RUN.** NovaCart is an implemented end-to-end data engineering project. The original cloud workspace was decommissioned to control costs; the project owner subsequently reported that the project ran successfully in their environment on **5 November 2026**. The implementation, notebooks, SQL, dashboard export, orchestration configuration, tests, and engineering documentation are preserved here. NovaCart is not presented as a continuously hosted public service. See the [execution record](docs/EXECUTION_RECORD.md) for the evidence boundary.
 
 ## Business problem
 
@@ -27,7 +27,7 @@ This presentation diagram gives the high-level view: operational sources, ingest
 
 ![NovaCart detailed medallion architecture](docs/novacart-architecture.svg)
 
-The detailed diagram focuses on incremental control state, Bronze/Silver/Gold responsibilities, Gold outputs, and the saved Databricks job flow. The project is a working implementation that ran in its original environment; the cloud workspace was later decommissioned for cost control.
+The detailed diagram focuses on incremental control state, Bronze/Silver/Gold responsibilities, Gold outputs, and the saved Databricks job flow. The original workspace was decommissioned for cost control; a subsequent successful run in the project owner's environment is recorded in the execution record.
 
 ## Technology stack
 
@@ -110,10 +110,11 @@ The JSON preserves configuration intent, but contains environment-specific works
 | [Engineering decisions](docs/ENGINEERING_DECISIONS.md) | Rationale, trade-offs, and correctness conditions |
 | [Operations runbook](docs/OPERATIONS_RUNBOOK.md) | Failure investigation, recovery, and reconciliation |
 | [Validation plan](docs/VALIDATION_PLAN.md) | Acceptance criteria and test scenarios to execute |
-| [Artifact audit](docs/ARTIFACT_AUDIT.md) | Static review of dashboard export, ZIP contents, and available execution evidence |
+| [Artifact audit](docs/ARTIFACT_AUDIT.md) | Review of preserved artifacts, engineering improvements, CI results, and runtime evidence boundaries |
+| [Execution record](docs/EXECUTION_RECORD.md) | Owner-confirmed environment run and the evidence retained in this repository |
 | [Release package guide](docs/RELEASE_PACKAGE.md) | How to retrieve the clean, CI-generated project archive |
 
-The project is presented as a working implementation. The validation plan is the repeatable acceptance checklist for future deployments and targeted regression scenarios; it is separate from the project's implementation status.
+The project is an owner-confirmed working implementation. The validation plan remains the repeatable checklist for detailed acceptance and regression scenarios; a successful overall run does not, by itself, prove every edge-case scenario in that plan.
 
 ## Release package and CI evidence
 
@@ -121,7 +122,7 @@ The repository includes a GitHub Actions workflow that validates notebook JSON a
 
 
 
-**Evidence boundary:** the dashboard JSON is a configuration export, not a rendered screenshot. The category-performance dataset now declares explicit business measures, and CI checks the dashboard contract. The notebook exports still contain no saved cell outputs. CI now runs local Spark tests against the shared Bronze, Silver, and Gold transformations, in addition to dashboard and job-template contract tests; it does not execute the full Databricks pipeline. See the [artifact audit](docs/ARTIFACT_AUDIT.md) for the remaining live-environment evidence requirements.
+**Execution and evidence boundary:** the project owner reports that the environment run completed successfully on 5 November 2026; this is recorded in the [execution record](docs/EXECUTION_RECORD.md). The repository does not yet retain the corresponding run IDs, task logs, populated notebook outputs, Gold reconciliation results, or rendered dashboard screenshot, so those details are not independently inspectable here. The dashboard JSON remains a configuration export. Separately, CI runs local Spark tests against the shared Bronze, Silver, and Gold transformations and checks dashboard/job contracts; it does not execute the full Databricks pipeline. See the [artifact audit](docs/ARTIFACT_AUDIT.md) for the evidence boundary.
 
 ## Local repository validation
 
@@ -146,7 +147,7 @@ The suite exercises Bronze watermark and timestamp rules; Silver money parsing, 
 
 ## Redeployment guide
 
-The platform is not currently running because the Azure Databricks workspace was deleted to control costs. To recreate the environment:
+The original Azure Databricks workspace was deleted to control costs. The project owner later reported a successful run in their environment on 5 November 2026. NovaCart is not represented as a continuously hosted service; use these steps to provision a fresh or repeatable environment:
 
 1. Provision the Azure SQL source and load the required tables and data.
 2. Create an Azure Databricks workspace and configure access to Azure SQL.
@@ -170,11 +171,11 @@ See the [deployment guide](docs/DEPLOYMENT.md) for the detailed checklist.
 
 ## Future improvements
 
-Engineering capabilities include layered incremental processing, Delta MERGE patterns, per-entity Gold processing state, watermark-driven Bronze ingestion, order-grain Gold output, payment-grain failure metrics, category-move refresh logic, SCD Type 2 history, snapshots, and documented orchestration. Bronze replay and same-timestamp update behavior should be validated against the source-system change contract before describing the ingestion path as fully replay-safe. Additional environment-specific regression evidence can be captured when the cloud workspace is recreated; this does not change the project's working implementation status.
+Engineering capabilities include layered incremental processing, Delta MERGE patterns, per-entity Gold processing state, watermark-driven Bronze ingestion, order-grain Gold output, payment-grain failure metrics, category-move refresh logic, SCD Type 2 history, snapshots, and documented orchestration. The project owner reports a successful environment run; detailed replay, same-timestamp, failure-injection, and full-recomputation scenarios should still be documented individually before claiming those edge cases were all independently demonstrated.
 
 ## Project deliverables
 
-This repository preserves the main notebooks, SQL scripts, dashboard export, job template, architecture visual, and supporting engineering documentation for the NovaCart case study. The [artifact audit](docs/ARTIFACT_AUDIT.md) documents the release contents and the engineering improvements committed to the working implementation. The legacy ZIP is not the preferred distribution package; use the current repository contents.
+This repository preserves the main notebooks, SQL scripts, dashboard export, job template, architecture visuals, automated tests, and engineering documentation for the NovaCart case study. The [artifact audit](docs/ARTIFACT_AUDIT.md) documents the release contents and engineering improvements; the [execution record](docs/EXECUTION_RECORD.md) records the project owner's successful environment-run confirmation and the evidence not yet retained in GitHub. The legacy ZIP is not the preferred distribution package; use the current repository contents.
 
 **Repository:** [viradidi/1NOVACART-CASE-STUDY](https://github.com/viradidi/1NOVACART-CASE-STUDY)
 

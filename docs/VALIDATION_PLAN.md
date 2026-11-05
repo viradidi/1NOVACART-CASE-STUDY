@@ -2,7 +2,13 @@
 
 ## Purpose
 
-This plan defines repeatable acceptance checks for the NovaCart incremental lakehouse pipeline. It distinguishes expected behavior from evidence actually collected. The original Databricks workspace has been decommissioned to control costs; live tests must be executed after redeployment.
+This plan defines repeatable acceptance checks for the NovaCart incremental lakehouse pipeline. It distinguishes expected behavior from evidence actually collected. The original Databricks workspace was decommissioned to control costs; the project owner subsequently reported a successful run in their environment on 5 November 2026. That overall run confirmation is recorded in [the execution record](EXECUTION_RECORD.md), but does not independently prove every targeted edge-case scenario below.
+
+## Current execution status
+
+- **Overall environment run:** owner-confirmed successful on 5 November 2026; see [execution record](EXECUTION_RECORD.md).
+- **Scenario-level evidence:** no run IDs, task logs, screenshots, row-count comparisons, or reconciliation outputs have been committed with this plan. Keep individual test statuses evidence-based; do not mark every matrix row as passed solely because the overall run completed successfully.
+- **Repository CI:** local Spark transformation tests and configuration-contract tests are tracked separately from live Databricks validation.
 
 ## Test prerequisites
 
@@ -208,7 +214,7 @@ A reviewable validation result includes:
 6. Query result, log excerpt, or screenshot that exposes no secrets or unnecessary personal data.
 7. Final status, reviewer, unresolved limitations, and follow-up issue.
 
-Keep code-review conclusions separate from runtime outcomes. Static inspection can identify risks or show that a test is defined; it cannot establish that a scenario passed in a live Databricks environment. Because the original workspace was decommissioned, these additional scenarios remain planned until executed after redeployment.
+Keep code-review conclusions separate from runtime outcomes. The project owner has confirmed a successful environment run on 5 November 2026. That confirmation establishes a successful overall run, but without scenario-level logs or reconciliation outputs it does not establish that every failure-injection, late-arrival, replay, and edge-case scenario in this plan passed. Record each targeted outcome separately when supporting evidence is available.
 
 
 ## Additional repository and deployment checks

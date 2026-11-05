@@ -2,7 +2,7 @@
 
 This guide explains how to recreate the NovaCart case-study environment from the artifacts in this repository.
 
-> **Project status: WORKING IMPLEMENTATION.** NovaCart was implemented and run in its original Azure Databricks environment. That workspace was later deleted to control costs, so the project is not currently hosted. This guide covers restoring the cloud environment if a live demonstration or regression run is needed. Cloud resource names, IDs, permissions, networking, and credentials must be configured for the target environment.
+> **Project status: WORKING IMPLEMENTATION — OWNER-CONFIRMED SUCCESSFUL RUN.** NovaCart ran in its original Azure Databricks environment; that workspace was later deleted to control costs. The project owner subsequently reported a successful run in their environment on 5 November 2026 (see [execution record](EXECUTION_RECORD.md)). This guide covers provisioning a repeatable environment for future demonstrations or targeted regression runs. Cloud resource names, IDs, permissions, networking, and credentials must be configured for the target environment.
 
 ## 0. Render the workspace-specific job definition
 
@@ -225,7 +225,7 @@ Deleting a workspace may not automatically remove every separately provisioned A
 
 ## 12. Deployment evidence
 
-When a future deployment is available, add a short record here or in a separate evidence document containing:
+The project owner has reported a successful environment run on 5 November 2026; see [the execution record](EXECUTION_RECORD.md). To make a future run independently auditable, add a short record here or in a separate evidence document containing:
 
 - Deployment date and non-sensitive environment overview.
 - Runtime and relevant configuration versions.
@@ -234,7 +234,7 @@ When a future deployment is available, add a short record here or in a separate 
 - Job outcome and failure/recovery evidence.
 - Dashboard screenshots using synthetic or approved data.
 
-Until that evidence exists, describe the project as a documented, redeployable case study with saved implementation artifacts—not as a currently running cloud service.
+The successful run is owner-confirmed, but the repository does not yet retain the corresponding run IDs, logs, saved notebook outputs, dashboard screenshot, or reconciliation results. Describe it as a successfully run implementation, not as a continuously hosted cloud service or as independently log-verified evidence.
 
 ## 13. Environment configuration and portability
 
@@ -355,4 +355,4 @@ Use this record for each redeployment. Do not include credentials, secret values
 - **Cost guardrails and cleanup owner:**
 - **Evidence location:**
 
-Do not populate this template with invented deployment details. The original workspace is decommissioned; a new deployment record should be completed only after the environment is actually recreated.
+Do not populate this template with invented deployment details. The original workspace was decommissioned, and a later successful run has been owner-confirmed in [the execution record](EXECUTION_RECORD.md). Complete this environment-specific template only when the actual non-sensitive configuration and run metadata are available.

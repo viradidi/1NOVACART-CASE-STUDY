@@ -1,6 +1,6 @@
 # NovaCart Artifact and Evidence Audit
 
-**Review scope:** repository ZIP archive, exported Databricks dashboard JSON, saved job configuration, and the three checked-in notebooks. This is a review of preserved repository artifacts and committed implementation improvements. The project has previously run in its original environment; the Azure Databricks workspace was later decommissioned to control costs.
+**Review scope:** repository ZIP archive, exported Databricks dashboard JSON, saved job configuration, the three checked-in notebooks, repository tests, and the recorded environment-run confirmation. The original Azure Databricks workspace was decommissioned to control costs; the project owner subsequently reported a successful run in their environment on 5 November 2026. See [the execution record](EXECUTION_RECORD.md).
 
 ## Findings at a glance
 
@@ -8,8 +8,8 @@
 |---|---|---|
 | Dashboard export | Structurally readable | A dashboard definition with datasets, filters, KPI counters, and charts is preserved |
 | Dashboard data sources | Consistent with the documented Gold model | The export points to `adb_datatocrunchproject.gold_schema.orders_information` and `category_performance` |
-| Dashboard runtime evidence | Not verified | The JSON does not prove the dashboard was successfully rendered or queried after export |
-| Notebook execution evidence | Historical project run; no saved cell outputs in current exports | The checked-in notebooks preserve implementation code; cell outputs are not embedded in these files |
+| Dashboard runtime evidence | Owner reports successful environment run; screenshot/query output not retained | The run confirmation is recorded, but the repository does not contain a rendered dashboard image or query/refresh log |
+| Notebook execution evidence | Owner-confirmed successful environment run; no saved cell outputs in current exports | The checked-in notebooks preserve implementation code; successful execution is owner-reported, while cell outputs and run metadata are not embedded in these files |
 | ZIP archive | Compared against checked-in notebooks | Corrected exports were compared; code-level mitigations for Gold payment grain, category moves, Bronze replay, checkpoints, and snapshot paths are committed. The archive is not a complete release package. |
 | Job configuration | Sanitized to a redeployment template | Personal recipient and old workspace-specific resource IDs have been replaced with placeholders |
 
@@ -27,13 +27,13 @@ The page definition contains date, category, and order-status filters; KPI count
 ### Important limitations
 
 - This is a **dashboard configuration export**, not a screenshot of a populated dashboard.
-- The saved workspace has been decommissioned. We cannot verify current query execution, rendered values, filter interactions, refresh behavior, or alert delivery from this file alone.
+- The original workspace was decommissioned. The project owner subsequently confirmed a successful run in their environment, but this repository does not retain the dashboard screenshot, query/refresh output, filter-interaction evidence, or alert-delivery record needed for an independent review of those details.
 - The Gold notebook now aggregates successful/settled payment amounts before joining at order grain, and computes payment failure rate at payment grain. Confirm the successful-status vocabulary against the source after redeployment; static changes are not runtime reconciliation evidence.
 - The category-performance dataset now declares explicit measures for total orders, GMV, total paid, average payment completion, and payment failure rate. Repository tests check its metric declarations, dataset references, and category-table fields. These are static contract checks; live query execution and rendered values still require a Databricks workspace.
 
 ### Evidence required for a portfolio claim
 
-After redeployment, retain a screenshot of the rendered dashboard with synthetic/approved data, the successful dashboard query or refresh result, and the corresponding Gold reconciliation results. Until then, describe this as an exported dashboard artifact, not live dashboard evidence.
+The owner-confirmed run is a meaningful execution milestone. To make dashboard behavior independently reviewable, retain a screenshot of the populated dashboard, its successful query/refresh result, and corresponding Gold reconciliation output using synthetic or approved data. Until those artifacts are committed, describe the run as owner-confirmed rather than independently evidenced dashboard output.
 
 ## 2. ZIP archive inspection
 
@@ -57,7 +57,7 @@ The current repository contains all three notebooks:
 
 The checked-in notebooks contain no saved code-cell outputs. They preserve implementation code, but they do not by themselves prove successful execution or expected row counts.
 
-Static review led to the following code-level mitigations. All remain subject to runtime validation after redeployment:
+Static review led to the following code-level mitigations. The project owner has since reported a successful environment run on 5 November 2026. The specific edge cases below should still be supported by scenario-level logs or reconciliation evidence before they are described as individually verified:
 
 1. **Bronze append/checkpoint boundary — code mitigation applied:** Bronze now MERGEs on the source primary key plus source change timestamp, preserving distinct versions while avoiding duplicate inserts after a failure between the data write and checkpoint update. Null primary keys or watermark timestamps are rejected before writing. This is a static code change; controlled failure/replay validation is still pending.
 2. **Source catalog name:** Bronze references `project-datatocruch_catalog`. Confirm that this is the exact foreign-catalog name in the intended environment; do not rename it blindly if it is the actual configured name.
@@ -65,7 +65,7 @@ Static review led to the following code-level mitigations. All remain subject to
 4. **Category changes — code mitigation applied:** Gold captures categories from existing Gold rows for impacted orders before merging, unions those with the new categories, recomputes aggregates for both sides of a move, and removes an obsolete category aggregate if no Gold orders remain in that category. The payment failure metric is recomputed at payment grain. Compare incremental output with a full recomputation after redeployment.
 5. **Historical snapshot path names — code mitigation applied:** Gold now writes to `gold_snapshots` and `category_performance`, and sanitizes colons in the run timestamp path component. The former workspace was deleted, so no live migration was performed. If an older environment is restored, migrate legacy folders deliberately.
 
-The code-level mitigations above are committed as improvements to the working implementation. Since the original workspace was decommissioned, these latest changes have not been exercised in that retired environment. Use [the validation plan](VALIDATION_PLAN.md) for focused regression checks when a workspace is next available; do not interpret the absence of a current workspace as meaning the project itself is unfinished.
+The code-level mitigations above are committed improvements to the working implementation. The owner has reported a successful run in their environment after these repository improvements; however, the exact deployed commit and scenario-level outputs were not supplied to the repository. Use [the validation plan](VALIDATION_PLAN.md) to retain focused evidence for replay, category-move, reconciliation, and other targeted regression cases. The lack of those detailed artifacts is an evidence limitation, not a claim that the implementation has never run.
 
 ## 4. Public job configuration
 
@@ -87,7 +87,7 @@ The legacy \`1NOVACART-CASE-STUDY.zip\` remains in the repository as a historica
 
 ## Release readiness and next milestone
 
-The implementation, repository-side transformation tests, dashboard/job contract tests, and clean packaging workflow are committed. GitHub Actions run `42069717620` for commit `c33e6c9007ba09a635724f51f597a66c5498ff75` passed on 2026-11-05. Its logs show 20 tests passed, all notebook and Python syntax checks passed, both architecture SVGs parsed, and the release ZIP verification succeeded. When the cloud workspace is recreated, run the focused validation scenarios for Delta retry semantics, per-entity checkpoints, initial and incremental loads, Gold reconciliation, SCD2, dashboard refresh, and SQL alert delivery. Those are environment integration and evidence tasks, not missing repository artifacts.
+The implementation, repository-side transformation tests, dashboard/job contract tests, and clean packaging workflow are committed. GitHub Actions run `42070113973` for commit `8e4a3ae1f4b3fff955d8fe8ac0cbf14108aa7eee` passed on 2026-11-05. Its logs show 20 tests passed, all notebook and Python syntax checks passed, both architecture SVGs parsed, and the release ZIP verification succeeded. In addition, the project owner reports that the project ran successfully in their environment on 2026-11-05; see [the execution record](EXECUTION_RECORD.md). The repository does not retain the corresponding cloud run IDs/logs or visual outputs. Focused validation evidence for replay, per-entity checkpoints, initial/incremental reconciliation, SCD2, dashboard refresh, and alert delivery would make the successful run independently auditable.
 
 ## 6. Follow-up hardening after this audit
 
@@ -99,12 +99,12 @@ These changes improve configuration correctness and deployment reproducibility. 
 
 ## 7. Evidence still unavailable or outstanding
 
-- **Notebook cell outputs:** the checked-in notebooks still contain no saved outputs. The original workspace has been decommissioned, so genuine execution outputs, row counts, and run metadata cannot be recovered from the notebooks. Capture them during the next live run; do not synthesize notebook output cells.
-- **Dashboard screenshot:** the committed artifact remains a dashboard configuration export. A real screenshot requires importing or recreating the dashboard in a live Databricks workspace and rendering it against approved test data. A generated mockup must not be presented as a real dashboard screenshot.
-- **Transformation tests:** local Spark tests execute the shared Bronze cursor/timestamp/null-key helpers; Silver order, product, and payment cleaning, locale-aware amount parsing, and quarantine identity; Gold payment rollups, payment-attempt health metrics, category aggregation/retry helpers, SCD2 integrity helpers, and snapshot path formatting. Configuration tests cover the dashboard export and job-template renderer. These are tests of extracted functions and static configuration, not a full live Delta MERGE / Unity Catalog / Lakehouse Federation integration test.
-- **Live validation:** the workspace-specific job renderer has not deployed or run a Databricks job. Notebook execution, dashboard refresh, alert delivery, and the validation-plan scenarios remain blocked until the environment is recreated.
+- **Notebook cell outputs:** the checked-in notebooks still contain no saved outputs. The owner confirmed a successful environment run, but genuine cell outputs, row counts, and run metadata were not supplied to GitHub. Add them from the actual run if available; never synthesize notebook output cells.
+- **Dashboard screenshot:** the committed artifact remains a dashboard configuration export. The owner reports successful environment execution, but no populated dashboard screenshot or query/refresh record is retained here. A generated mockup must not be presented as a real dashboard screenshot.
+- **Transformation tests:** local Spark tests execute the shared Bronze cursor/timestamp/null-key helpers; Silver order, product, and payment cleaning, locale-aware amount parsing, and quarantine identity; Gold payment rollups, payment-attempt health metrics, category aggregation/retry helpers, SCD2 integrity helpers, and snapshot path formatting. Configuration tests cover the dashboard export and job-template renderer. These are tests of extracted functions and static configuration, not a full isolated integration test of every Delta MERGE / Unity Catalog / Lakehouse Federation edge case.
+- **Live validation:** the project owner reports a successful run in their environment on 2026-11-05. The environment-specific rendered job definition, exact deployed commit, run IDs, task logs, query outputs, alert-delivery record, and scenario-level reconciliation evidence have not been committed. Therefore, the general run confirmation must not be expanded into claims that every targeted failure-injection or edge-case scenario passed.
 
-The repository-side test suite is wired into GitHub Actions with Java 17 and PySpark 3.5.1. The successful run produced a clean release artifact; full Databricks/Delta integration, notebook outputs, dashboard screenshots, and runtime evidence still require the workspace to be recreated. Full Databricks/Delta integration, notebook outputs, dashboard screenshots, and runtime evidence require the workspace to be recreated.
+The repository-side test suite is wired into GitHub Actions with Java 17 and PySpark 3.5.1. The latest recorded CI run passed 20 tests and produced a clean release artifact. The user-reported environment run adds live-execution confirmation; retained runtime artifacts would make that confirmation independently auditable.
 
 
 ## 8. Additional repository verification and hardening
