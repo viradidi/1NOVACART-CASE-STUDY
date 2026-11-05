@@ -133,3 +133,10 @@ Gold now uses two distinct Silver payment feeds deliberately:
 - `payments_cleaned` supplies the latest cleaned attempt status and payment-grain failure-rate population, including attempts whose amount is quarantined. Rows with a null payment status are excluded from the failure-rate denominator.
 
 The Gold local Spark tests cover this separation: a failed attempt with a null amount is still the latest payment status, is counted in payment failure rate, and does not contribute to paid amount. This keeps payment-health signals from disappearing merely because an amount field failed validation.
+
+
+## 11. Last-known-good and SCD2 integrity controls
+
+The Silver notebooks merge only valid records into the `*_transformed` tables. An invalid newer source version is written to the cleaned/quarantine path, while the previous valid transformed row remains as last-known-good state. This is intentional: it prevents bad source values from corrupting current analytics, but it means transformed data can be stale until the invalid source is corrected and reprocessed. The repository documentation now calls out this behavior and the separate hard-delete limitation.
+
+Gold now uses cleaned payment attempts for latest status and failure-rate metrics, while validated transformed payment rows supply paid amount. The notebook also checks for duplicate current SCD2 versions and current Gold orders missing a current SCD2 history row after its SCD2 update. These guards are covered by local Spark helper tests; the full Delta notebook sequence still requires live execution.
