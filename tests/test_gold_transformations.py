@@ -14,6 +14,8 @@ from novacart_transformations import (
     normalize_source_timestamp,
     find_invalid_cursor_rows,
     format_snapshot_run_path,
+    find_scd2_current_duplicates,
+    find_gold_orders_missing_current_scd2,
 )
 
 
@@ -81,6 +83,31 @@ class NovaCartGoldTransformationTests(unittest.TestCase):
             ).collect()
         }
         self.assertEqual(actual, {"OLD_CATEGORY", "NEW_CATEGORY"})
+
+    def test_scd2_integrity_checks_detect_duplicate_current_and_missing_history(self):
+        history = self.spark.createDataFrame(
+            [
+                ("o-1", True),
+                ("o-1", False),
+                ("o-2", True),
+                ("o-2", True),
+            ],
+            ["order_id", "is_current"],
+        )
+        gold = self.spark.createDataFrame(
+            [("o-1",), ("o-2",), ("o-3",)],
+            ["order_id"],
+        )
+        duplicates = {
+            row["order_id"]
+            for row in find_scd2_current_duplicates(history).collect()
+        }
+        missing = {
+            row["order_id"]
+            for row in find_gold_orders_missing_current_scd2(gold, history).collect()
+        }
+        self.assertEqual(duplicates, {"o-2"})
+        self.assertEqual(missing, {"o-3"})
 
     def test_gold_snapshot_path_is_filesystem_safe_and_unique_per_run(self):
         started = datetime(2026, 11, 5, 12, 55, 30, 123456)
