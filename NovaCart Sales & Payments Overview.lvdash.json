@@ -80,7 +80,7 @@
               "currencyCode": "USD",
               "decimalPlaces": {
                 "type": "exact",
-                "places": 2.0
+                "places": 2
               }
             }
           },
@@ -92,7 +92,7 @@
               "type": "percentage",
               "decimalPlaces": {
                 "type": "exact",
-                "places": 1.0
+                "places": 1
               }
             }
           }
@@ -107,15 +107,58 @@
         "source": "adb_datatocrunchproject.gold_schema.category_performance",
         "dimensions": [
           {
-            "expr": "source.*"
+            "expr": "category"
           }
         ],
         "measures": [
           {
-            "name": "count",
-            "expr": "COUNT(*)",
-            "comment": "Represents the total number of rows in the dataset. Use this measure to count all",
-            "displayName": "Count"
+            "name": "total_orders",
+            "expr": "SUM(total_orders)",
+            "displayName": "Total Orders"
+          },
+          {
+            "name": "gmv",
+            "expr": "SUM(Gross_Merchandise_Value)",
+            "displayName": "Gross Merchandise Value",
+            "format": {
+              "type": "currency",
+              "currencyCode": "USD",
+              "abbreviation": "compact"
+            }
+          },
+          {
+            "name": "total_paid",
+            "expr": "SUM(Total_Paid_Amount)",
+            "displayName": "Total Paid",
+            "format": {
+              "type": "currency",
+              "currencyCode": "USD",
+              "abbreviation": "compact"
+            }
+          },
+          {
+            "name": "average_payment_completion_ratio",
+            "expr": "AVG(Average_Payment_Completion_Ratio)",
+            "displayName": "Average Payment Completion",
+            "format": {
+              "type": "percentage",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1
+              }
+            }
+          },
+          {
+            "name": "payment_failure_rate",
+            "expr": "AVG(Payment_Failure_Rate)",
+            "displayName": "Payment Failure Rate",
+            "format": {
+              "type": "percentage",
+              "decimalPlaces": {
+                "type": "exact",
+                "places": 1
+              }
+            }
           }
         ]
       }
