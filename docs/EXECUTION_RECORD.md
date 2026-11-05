@@ -2,7 +2,7 @@
 
 ## Status
 
-<badge>Owner-confirmed successful environment run</badge>
+**Status: Owner-confirmed successful environment run**
 
 **Reported run date:** 5 November 2026  
 **Reported outcome:** The project owner confirmed that all project run steps completed successfully in their environment.
