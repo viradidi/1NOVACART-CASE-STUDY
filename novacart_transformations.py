@@ -35,10 +35,11 @@ def _parse_numeric_amount(column_name: str):
     return F.when(valid_numeric, normalized.cast("double")).otherwise(F.lit(None).cast("double"))
 
 
-def aggregate_payments_by_order(payments_df):
-    """Return paid-amount rollup and deterministic latest payment descriptors."""
+def aggregate_payments_by_order(valid_payments_df, payment_attempts_df=None):
+    """Roll up validated paid amounts while describing the latest source payment attempt."""
+    attempts = payment_attempts_df if payment_attempts_df is not None else valid_payments_df
     payment_rollup = (
-        payments_df
+        valid_payments_df
         .groupBy("order_id")
         .agg(
             F.sum(
@@ -46,23 +47,23 @@ def aggregate_payments_by_order(payments_df):
                     F.upper(F.trim(F.col("payment_status"))).isin(*SUCCESSFUL_PAYMENT_STATUSES),
                     F.coalesce(F.col("paid_amount").cast("double"), F.lit(0.0)),
                 ).otherwise(F.lit(0.0))
-            ).alias("paid_amount"),
-            F.max(F.col("processed_at").cast("timestamp")).alias("latest_payment_processed_at"),
+            ).alias("paid_amount")
         )
     )
 
     payment_window = Window.partitionBy("order_id").orderBy(
         F.col("processed_at").cast("timestamp").desc_nulls_last(),
-        F.col("payment_id").cast("string").desc_nulls_last(),
+        F.col("payment_id").cast("long").desc_nulls_last(),
     )
     latest_payment = (
-        payments_df
+        attempts
         .withColumn("_payment_rank", F.row_number().over(payment_window))
         .filter(F.col("_payment_rank") == 1)
         .select(
             "order_id",
             "payment_id",
             F.col("payment_status").alias("payment_status"),
+            F.col("processed_at").cast("timestamp").alias("latest_payment_processed_at"),
         )
     )
     return payment_rollup, latest_payment
@@ -95,7 +96,9 @@ def calculate_category_metrics(
     )
 
     payment_category_metrics = (
-        silver_payments_df.alias("py")
+        silver_payments_df
+        .filter(F.col("payment_status").isNotNull())
+        .alias("py")
         .join(silver_orders_df.alias("o"), "order_id", "inner")
         .join(
             silver_products_df.alias("p"),
