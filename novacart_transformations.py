@@ -367,4 +367,29 @@ def find_invalid_cursor_rows(source_df, primary_key_column, timestamp_column):
 def format_snapshot_run_path(run_started_at, gold_run_id):
     """Build a collision-resistant, filesystem-safe timestamp folder component."""
     timestamp_component = run_started_at.strftime("%Y-%m-%dT%H-%M-%S.%fZ")
-    return f"{timestamp_component}_{str(gold_run_id)[:8]}"
+    return f"{timestamp_component}_{str(gold_run_id)}"
+
+
+def find_scd2_current_duplicates(scd2_history_df):
+    """Return business keys with more than one current SCD2 version."""
+    return (
+        scd2_history_df
+        .filter(F.col("is_current") == F.lit(True))
+        .groupBy("order_id")
+        .count()
+        .filter(F.col("count") > 1)
+    )
+
+
+def find_gold_orders_missing_current_scd2(gold_orders_df, scd2_history_df):
+    """Return current Gold orders that have no current SCD2 version."""
+    current_scd2_keys = (
+        scd2_history_df
+        .filter(F.col("is_current") == F.lit(True))
+        .select("order_id")
+        .distinct()
+    )
+    return (
+        gold_orders_df.select("order_id").distinct()
+        .join(current_scd2_keys, "order_id", "left_anti")
+    )
