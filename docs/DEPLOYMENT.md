@@ -69,6 +69,8 @@ Exact compute sizes, cloud resource names, region, runtime, and networking optio
 
 ## 4. Create and load the source database
 
+> **Destructive setup warning:** `sql-tables-creation.sql` drops the existing `dbo.payments`, `dbo.orders`, and `dbo.products` tables before recreating them. `initial-load-for-mess-data.sql` deletes all rows from those three tables before loading its synthetic fixture. Use these scripts only against a disposable development database that contains no data you need to retain. Do not run them against production or an existing shared database.
+
 1. Create the Azure SQL database.
 2. Open and review `sql-tables-creation.sql`.
 3. Run the script in the intended database to create the `products`, `orders`, and `payments` tables.
