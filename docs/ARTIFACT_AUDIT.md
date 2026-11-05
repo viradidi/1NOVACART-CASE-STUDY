@@ -29,7 +29,7 @@ The page definition contains date, category, and order-status filters; KPI count
 - This is a **dashboard configuration export**, not a screenshot of a populated dashboard.
 - The saved workspace has been decommissioned. We cannot verify current query execution, rendered values, filter interactions, refresh behavior, or alert delivery from this file alone.
 - The Gold notebook now aggregates successful/settled payment amounts before joining at order grain, and computes payment failure rate at payment grain. Confirm the successful-status vocabulary against the source after redeployment; static changes are not runtime reconciliation evidence.
-- The category-performance dataset uses a generic row-count measure in its dataset definition; validate each category-table column and metric against the actual Gold schema after redeployment.
+- The category-performance dataset now declares explicit measures for total orders, GMV, total paid, average payment completion, and payment failure rate. Repository tests check its metric declarations, dataset references, and category-table fields. These are static contract checks; live query execution and rendered values still require a Databricks workspace.
 
 ### Evidence required for a portfolio claim
 
