@@ -117,3 +117,151 @@ def calculate_category_metrics(
         .select("category")
     )
     return metrics, stale_categories
+
+
+def clean_order_batch(orders_inc, silver_run_id):
+    """Clean, deduplicate, validate, and split an incremental order batch."""
+    order_window = Window.partitionBy("order_id").orderBy(
+        F.col("updated_at").cast("timestamp").desc(),
+        F.col("bronze_ingested_at").desc(),
+    )
+    cleaned = (
+        orders_inc
+        .withColumn("order_status", F.upper(F.trim(F.col("order_status"))))
+        .withColumn("order_status", F.when(F.col("order_status") == "", F.lit(None)).otherwise(F.col("order_status")))
+        .withColumn("order_amount", F.regexp_replace(F.col("order_amount"), r"[$, ]", ""))
+        .withColumn("order_amount", F.when(F.trim(F.col("order_amount")).isin("N/A", "NULL", "??", ""), None).otherwise(F.col("order_amount")))
+        .withColumn("order_amount", F.col("order_amount").cast("double"))
+        .withColumn("created_at", F.to_timestamp("created_at"))
+        .withColumn("updated_at", F.to_timestamp("updated_at"))
+        .withColumn("row_rank", F.row_number().over(order_window))
+        .filter(F.col("row_rank") == 1)
+        .drop("row_rank")
+        .withColumn("silver_run_id", F.lit(silver_run_id))
+    )
+    validated = (
+        cleaned
+        .withColumn(
+            "to_be_verified_by_orders_team",
+            F.when(F.col("customer_id").isNull(), "verify_customer_id")
+            .when(F.col("product_id").isNull(), "verify_product_id")
+            .when(F.col("order_status").isNull() | (F.trim(F.col("order_status")) == ""), "verify_order_status")
+            .when(F.col("order_amount").isNull() | (F.col("order_amount") <= 0), "verify_order_amount")
+            .otherwise("No Issues"),
+        )
+        .withColumn(
+            "check_order_amount",
+            F.when(F.col("order_amount").isNull() | (F.col("order_amount") <= 0), F.lit(True))
+            .otherwise(F.lit(False)),
+        )
+        .withColumn("order_date", F.to_date("created_at"))
+        .withColumn("order_year", F.year("created_at"))
+        .withColumn("order_month", F.month("created_at"))
+        .withColumn("order_day", F.dayofmonth("created_at"))
+        .withColumn("order_dow", F.date_format("created_at", "E"))
+    )
+    good = validated.filter(F.col("to_be_verified_by_orders_team") == "No Issues")
+    bad = validated.filter(F.col("to_be_verified_by_orders_team") != "No Issues").withColumn(
+        "quarantine_ts", F.current_timestamp()
+    )
+    return cleaned, good, bad
+
+
+def clean_product_batch(products_inc, silver_run_id):
+    """Clean, deduplicate, validate, and split an incremental product batch."""
+    product_window = Window.partitionBy("product_id").orderBy(
+        F.col("updated_at").cast("timestamp").desc(),
+        F.col("bronze_ingested_at").desc(),
+    )
+    cleaned = (
+        products_inc
+        .withColumn("product_name", F.upper(F.trim(F.col("product_name"))))
+        .withColumn("product_name", F.regexp_replace(F.col("product_name"), r"[-_]", " "))
+        .withColumn("product_name", F.when(F.col("product_name") == "", F.lit(None)).otherwise(F.col("product_name")))
+        .withColumn(
+            "category",
+            F.when(F.upper(F.trim(F.col("category"))).contains("ELECTRNICS"), "ELECTRONICS")
+            .when(F.upper(F.trim(F.col("category"))) == "FITNESS", "FITNESS")
+            .when(F.upper(F.trim(F.col("category"))) == "LIFESTYLE", "LIFESTYLE")
+            .otherwise(F.upper(F.trim(F.col("category")))),
+        )
+        .withColumn("price", F.trim(F.col("price")))
+        .withColumn("price", F.regexp_replace(F.col("price"), r"\\$", ""))
+        .withColumn("price", F.regexp_replace(F.col("price"), r",", ""))
+        .withColumn("price", F.regexp_replace(F.col("price"), r" ", ""))
+        .withColumn("price", F.expr("try_cast(price as double)"))
+        .withColumn("updated_at", F.to_timestamp("updated_at"))
+        .withColumn("row_rank", F.row_number().over(product_window))
+        .filter(F.col("row_rank") == 1)
+        .drop("row_rank")
+        .withColumn("silver_run_id", F.lit(silver_run_id))
+    )
+    validated = (
+        cleaned
+        .withColumn(
+            "to_be_verified_by_products_team",
+            F.when(F.col("product_name").isNull(), "verify_product_name")
+            .when(F.col("category").isNull(), "verify_category")
+            .when(F.col("price").isNull() | (F.col("price") <= 0), "verify_price")
+            .otherwise("No Issues"),
+        )
+        .withColumn(
+            "check_product_price",
+            F.when(F.col("price").isNull() | (F.col("price") <= 0), "invalid_price")
+            .otherwise("valid_price"),
+        )
+    )
+    good = validated.filter(
+        (F.col("to_be_verified_by_products_team") == "No Issues")
+        & (F.col("check_product_price") == "valid_price")
+    )
+    if "price_raw" in good.columns:
+        good = good.drop("price_raw")
+    bad = validated.filter(
+        (F.col("to_be_verified_by_products_team") != "No Issues")
+        | (F.col("check_product_price") == "invalid_price")
+    ).withColumn("quarantine_ts", F.current_timestamp())
+    return cleaned, good, bad
+
+
+def clean_payment_batch(payments_inc, silver_run_id):
+    """Clean, deduplicate, validate, and split an incremental payment batch."""
+    payment_window = Window.partitionBy("payment_id").orderBy(
+        F.col("processed_at").cast("timestamp").desc(),
+        F.col("bronze_ingested_at").desc(),
+    )
+    cleaned = (
+        payments_inc
+        .withColumn("payment_status", F.upper(F.trim(F.col("payment_status"))))
+        .withColumn("payment_status", F.when(F.col("payment_status") == "", F.lit(None)).otherwise(F.col("payment_status")))
+        .withColumn("paid_amount", F.trim(F.col("paid_amount")))
+        .withColumn("paid_amount", F.regexp_replace(F.col("paid_amount"), r"\\$", ""))
+        .withColumn("paid_amount", F.regexp_replace(F.col("paid_amount"), r",", ""))
+        .withColumn("paid_amount", F.regexp_replace(F.col("paid_amount"), r" ", ""))
+        .withColumn("paid_amount", F.expr("try_cast(paid_amount as double)"))
+        .withColumn("processed_at", F.to_timestamp("processed_at"))
+        .withColumn("row_rank", F.row_number().over(payment_window))
+        .filter(F.col("row_rank") == 1)
+        .drop("row_rank")
+        .withColumn("silver_run_id", F.lit(silver_run_id))
+    )
+    validated = (
+        cleaned
+        .withColumn(
+            "to_be_verified_by_payments_team",
+            F.when(F.col("order_id").isNull(), "verify_order_id")
+            .when(F.col("payment_status").isNull(), "verify_payment_status")
+            .when(F.col("paid_amount").isNull() | (F.col("paid_amount") <= 0), "verify_paid_amount")
+            .otherwise("No Issues"),
+        )
+        .withColumn(
+            "check_paid_amount",
+            F.when(F.col("paid_amount").isNull() | (F.col("paid_amount") <= 0), F.lit(True))
+            .otherwise(F.lit(False)),
+        )
+    )
+    good = validated.filter(F.col("to_be_verified_by_payments_team") == "No Issues")
+    bad = validated.filter(F.col("to_be_verified_by_payments_team") != "No Issues").withColumn(
+        "quarantine_ts", F.current_timestamp()
+    )
+    return cleaned, good, bad
