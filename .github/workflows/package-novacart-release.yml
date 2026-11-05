@@ -45,6 +45,9 @@ jobs:
           print("README documentation links OK")
           PY
 
+      - name: Run repository-side unit tests
+        run: python -m unittest discover -s tests -v
+
       - name: Build clean release archive
         run: |
           zip -r NovaCart-Release.zip . \
