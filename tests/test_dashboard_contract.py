@@ -28,12 +28,13 @@ class DashboardContractTests(unittest.TestCase):
     def test_category_table_references_declared_dataset_fields(self):
         dataset = next(item for item in self.dashboard["datasets"] if item["displayName"] == "category_performance")
         declared_dimensions = {item["expr"] for item in dataset["config"]["dimensions"]}
-        declared_measures = {
-            "total_orders",
-            "Gross_Merchandise_Value",
-            "Total_Paid_Amount",
-            "Average_Payment_Completion_Ratio",
-            "Payment_Failure_Rate",
+        measure_expressions = {item["expr"] for item in dataset["config"]["measures"]}
+        expected_expressions = {
+            "SUM(total_orders)",
+            "SUM(Gross_Merchandise_Value)",
+            "SUM(Total_Paid_Amount)",
+            "AVG(Average_Payment_Completion_Ratio)",
+            "AVG(Payment_Failure_Rate)",
         }
         table = next(
             item["widget"]
@@ -43,7 +44,9 @@ class DashboardContractTests(unittest.TestCase):
         )
         fields = {field["name"] for field in table["queries"][0]["query"]["fields"]}
         self.assertIn("category", declared_dimensions)
-        self.assertTrue(declared_measures.issubset(fields))
+        self.assertTrue(expected_expressions.issubset(measure_expressions))
+        self.assertTrue({"total_orders", "Gross_Merchandise_Value", "Total_Paid_Amount", "Average_Payment_Completion_Ratio", "Payment_Failure_Rate"}.issubset(fields))
+        self.assertEqual(table["queries"][0]["query"]["datasetName"], dataset["name"])
 
 
 if __name__ == "__main__":
