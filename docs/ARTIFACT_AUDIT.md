@@ -105,4 +105,4 @@ These changes improve configuration correctness and deployment reproducibility. 
 - **Transformation tests:** the new automated tests currently cover job-template rendering and dashboard configuration contracts. They do not yet execute the PySpark transformation logic in Bronze, Silver, or Gold. That remains a separate engineering task; the current CI still does not prove Spark transformation correctness.
 - **Live validation:** the workspace-specific job renderer has not deployed or run a Databricks job. Notebook execution, dashboard refresh, alert delivery, and the validation-plan scenarios remain blocked until the environment is recreated.
 
-The next repository-side milestone is executable unit coverage for the transformation logic, followed by a real environment run when the user recreates the Azure/Databricks workspace.
+The repository-side transformation coverage is now implemented and wired into GitHub Actions with Java 17 and PySpark 3.5.1. The next milestone is confirming the workflow run is green, then performing full Databricks/Delta integration and evidence capture when the workspace is recreated.
