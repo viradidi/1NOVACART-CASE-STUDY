@@ -88,3 +88,21 @@ The legacy `1NOVACART-CASE-STUDY.zip` remains in the repository as a historical 
 ## Release readiness and next milestone
 
 The main implementation, targeted correctness improvements, and automated clean-package workflow are committed. The legacy root ZIP remains for historical reference, but the workflow excludes it and packages the current repository contents into a downloadable Actions artifact. The remaining release step is operational: confirm a successful packaging run and retrieve its artifact when needed. When a cloud workspace is next available, run focused regression scenarios for payment multiplicity, category moves, replay after partial failure, per-entity checkpoints, and Gold reconciliation. Those are follow-up regression checks for the latest changes, not a reclassification of the project as non-working.
+
+
+## 6. Follow-up hardening after this audit
+
+The dashboard export has been updated so the `category_performance` dataset declares the category dimension and explicit business measures for total orders, GMV, total paid, average payment completion, and payment failure rate. The category table widget continues to reference the corresponding source columns. A repository-side dashboard contract test checks the declared measures and widget-to-dataset reference.
+
+The sanitized job JSON remains a template by design. A new `deployment/render_novacart_job.py` utility now generates a target-workspace job definition from real dashboard, alert, warehouse, and workspace-path inputs. It validates required tasks, dependencies, and single-run concurrency. Unit tests cover rendering, required IDs, immutable template handling, and absolute workspace paths. The GitHub Actions workflow now runs the repository's unittest suite before packaging.
+
+These changes improve configuration correctness and deployment reproducibility. They do not create cloud resources, verify that supplied IDs exist, render the dashboard, or execute the notebooks.
+
+## 7. Evidence still unavailable or outstanding
+
+- **Notebook cell outputs:** the checked-in notebooks still contain no saved outputs. The original workspace has been decommissioned, so genuine execution outputs, row counts, and run metadata cannot be recovered from the notebooks. Capture them during the next live run; do not synthesize notebook output cells.
+- **Dashboard screenshot:** the committed artifact remains a dashboard configuration export. A real screenshot requires importing or recreating the dashboard in a live Databricks workspace and rendering it against approved test data. A generated mockup must not be presented as a real dashboard screenshot.
+- **Transformation tests:** the new automated tests currently cover job-template rendering and dashboard configuration contracts. They do not yet execute the PySpark transformation logic in Bronze, Silver, or Gold. That remains a separate engineering task; the current CI still does not prove Spark transformation correctness.
+- **Live validation:** the workspace-specific job renderer has not deployed or run a Databricks job. Notebook execution, dashboard refresh, alert delivery, and the validation-plan scenarios remain blocked until the environment is recreated.
+
+The next repository-side milestone is executable unit coverage for the transformation logic, followed by a real environment run when the user recreates the Azure/Databricks workspace.
