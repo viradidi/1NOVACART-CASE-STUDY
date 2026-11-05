@@ -15,7 +15,7 @@ SUCCESSFUL_PAYMENT_STATUSES = (
 
 
 def _parse_numeric_amount(column_name: str):
-    """Parse US thousands separators and decimal-comma amounts without inflation."""
+    """Parse supported US/EU money formats; reject malformed separator patterns."""
     raw = F.regexp_replace(
         F.trim(F.col(column_name).cast("string")),
         r"[$€£\s]",
@@ -23,17 +23,17 @@ def _parse_numeric_amount(column_name: str):
     )
     european_thousands_decimal = raw.rlike(r"^[+-]?\d{1,3}(?:\.\d{3})+,\d{1,2}$")
     decimal_comma = raw.rlike(r"^[+-]?\d+,\d{1,2}$")
+    us_number = raw.rlike(r"^[+-]?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$")
     normalized = (
         F.when(
             european_thousands_decimal,
             F.regexp_replace(F.regexp_replace(raw, r"\.", ""), ",", "."),
         )
         .when(decimal_comma, F.regexp_replace(raw, ",", "."))
-        .otherwise(F.regexp_replace(raw, ",", ""))
+        .when(us_number, F.regexp_replace(raw, ",", ""))
+        .otherwise(F.lit(None).cast("string"))
     )
-    valid_numeric = normalized.rlike(r"^[+-]?\d+(?:\.\d+)?$")
-    return F.when(valid_numeric, normalized.cast("double")).otherwise(F.lit(None).cast("double"))
-
+    return normalized.cast("double")
 
 def aggregate_payments_by_order(valid_payments_df, payment_attempts_df=None):
     """Roll up validated paid amounts while describing the latest source payment attempt."""
