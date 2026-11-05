@@ -102,7 +102,18 @@ These changes improve configuration correctness and deployment reproducibility. 
 
 - **Notebook cell outputs:** the checked-in notebooks still contain no saved outputs. The original workspace has been decommissioned, so genuine execution outputs, row counts, and run metadata cannot be recovered from the notebooks. Capture them during the next live run; do not synthesize notebook output cells.
 - **Dashboard screenshot:** the committed artifact remains a dashboard configuration export. A real screenshot requires importing or recreating the dashboard in a live Databricks workspace and rendering it against approved test data. A generated mockup must not be presented as a real dashboard screenshot.
-- **Transformation tests:** the new automated tests currently cover job-template rendering and dashboard configuration contracts. They do not yet execute the PySpark transformation logic in Bronze, Silver, or Gold. That remains a separate engineering task; the current CI still does not prove Spark transformation correctness.
+- **Transformation tests:** local Spark tests now execute the shared Bronze cursor, Silver order/product/payment cleaning and quarantine identity, Gold payment rollup and category metrics. These are unit tests of extracted functions, not a live Delta MERGE / Unity Catalog / Lakehouse Federation integration test.
 - **Live validation:** the workspace-specific job renderer has not deployed or run a Databricks job. Notebook execution, dashboard refresh, alert delivery, and the validation-plan scenarios remain blocked until the environment is recreated.
 
 The repository-side transformation coverage is now implemented and wired into GitHub Actions with Java 17 and PySpark 3.5.1. The next milestone is confirming the workflow run is green, then performing full Databricks/Delta integration and evidence capture when the workspace is recreated.
+
+
+## 8. Additional repository verification and hardening
+
+The shared transformation module now parses monetary strings according to their separators. It handles US-style values such as `$1,234.50`, decimal-comma values such as `100,00`, and European thousands-plus-decimal values such as `1.234,56`; malformed strings become null and are handled by the existing Silver validation/quarantine rules. This closes a material issue in the supplied synthetic SQL data, which intentionally contains comma-decimal values.
+
+Silver quarantine records now receive a deterministic `quarantine_id` derived from the entity business key and source change timestamp. The Silver notebook uses a Delta MERGE on that ID rather than append-only writes, preventing duplicate quarantine records if a task is retried after quarantine persistence but before its processing checkpoint is recorded. Existing quarantine tables created before this schema change must be migrated or recreated; the notebook intentionally stops with a clear error when it encounters an old schema rather than silently falling back to duplicate-prone appends.
+
+The old Silver one-time orders-cleaned backfill and ad-hoc debug query cells have been removed from the scheduled notebook. They were not part of the normal incremental contract and could overwrite the cleaned table with an arbitrarily selected historical duplicate. Gold no longer displays entire changed-order and Gold-delta DataFrames in a scheduled job, avoiding large notebook result payloads.
+
+The strengthened CI checks notebook Python syntax, shared-module imports, both architecture SVGs, test modules, the dashboard/job configuration contracts, local Spark transformation behavior, and the release archive contents. Generated Python caches and the legacy ZIP are excluded from the release package.
