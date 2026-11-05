@@ -42,6 +42,10 @@ class RenderNovaCartJobTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             render_job(self.template, "/Workspace/Shared/NovaCart", "", "alert", "warehouse")
 
+    def test_rejects_relative_workspace_root(self):
+        with self.assertRaises(ValueError):
+            render_job(self.template, "Workspace/Shared/NovaCart", "d", "a", "w")
+
     def test_does_not_mutate_template(self):
         before = json.dumps(self.template, sort_keys=True)
         render_job(self.template, "/Workspace/Shared/NovaCart", "d", "a", "w")
