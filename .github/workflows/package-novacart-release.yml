@@ -15,36 +15,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
 
-      - name: Validate project artifacts
-        run: |
-          python - <<'PY'
-          import json
-          import re
-          import xml.etree.ElementTree as ET
-          from pathlib import Path
-
-          root = Path(".")
-          notebooks = [
-              root / "bronze_work.ipynb",
-              root / "silver_work.ipynb",
-              root / "gold_work.ipynb",
-          ]
-          json_files = [
-              root / "novacart_job.json",
-              root / "NovaCart Sales & Payments Overview.lvdash.json",
-          ]
-          for path in notebooks + json_files:
-              json.loads(path.read_text(encoding="utf-8"))
-              print(f"JSON OK: {path}")
-          ET.parse(root / "docs" / "novacart-architecture.svg")
-          print("SVG OK: docs/novacart-architecture.svg")
-          readme = (root / "README.md").read_text(encoding="utf-8")
-          for target in re.findall(r"\]\((docs/[^)]+)\)", readme):
-              if not (root / target).is_file():
-                  raise SystemExit(f"Broken README link: {target}")
-          print("README documentation links OK")
-          PY
-
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
@@ -56,18 +26,142 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Validate project artifacts and notebook syntax
+        run: |
+          python - <<'PY'
+          import ast
+          import json
+          import re
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          root = Path(".")
+          notebook_paths = [
+              root / "bronze_work.ipynb",
+              root / "silver_work.ipynb",
+              root / "gold_work.ipynb",
+          ]
+          json_paths = [
+              root / "novacart_job.json",
+              root / "NovaCart Sales & Payments Overview.lvdash.json",
+          ]
+
+          for path in notebook_paths + json_paths:
+              json.loads(path.read_text(encoding="utf-8"))
+              print(f"JSON OK: {path}")
+
+          for notebook_path in notebook_paths:
+              notebook = json.loads(notebook_path.read_text(encoding="utf-8"))
+              parsed_cells = 0
+              skipped_magic_cells = 0
+              for cell_index, cell in enumerate(notebook.get("cells", [])):
+                  if cell.get("cell_type") != "code":
+                      continue
+                  source = "".join(cell.get("source", []))
+                  if not source.strip():
+                      continue
+                  first_line = source.lstrip().splitlines()[0]
+                  if first_line.startswith(("%", "!")):
+                      skipped_magic_cells += 1
+                      continue
+                  ast.parse(source, filename=f"{notebook_path}#cell-{cell_index}")
+                  parsed_cells += 1
+              if not parsed_cells:
+                  raise SystemExit(f"No Python code cells were syntax-checked in {notebook_path}")
+              print(
+                  f"Notebook Python syntax OK: {notebook_path} "
+                  f"({parsed_cells} cells; {skipped_magic_cells} magic cells skipped)"
+              )
+
+          python_files = [
+              root / "novacart_transformations.py",
+              root / "deployment" / "render_novacart_job.py",
+              *sorted((root / "tests").glob("*.py")),
+          ]
+          for path in python_files:
+              compile(path.read_text(encoding="utf-8"), str(path), "exec")
+              print(f"Python syntax OK: {path}")
+
+          for svg_path in [
+              root / "docs" / "novacart-architecture.svg",
+              root / "docs" / "novacart-end-to-end-architecture.svg",
+          ]:
+              ET.parse(svg_path)
+              print(f"SVG OK: {svg_path}")
+
+          readme = (root / "README.md").read_text(encoding="utf-8")
+          for target in re.findall(r"\\]\\((docs/[^)]+)\\)", readme):
+              if not (root / target).is_file():
+                  raise SystemExit(f"Broken README link: {target}")
+          print("README documentation links OK")
+
+          for notebook_path in notebook_paths:
+              text = notebook_path.read_text(encoding="utf-8")
+              if "from novacart_transformations import" not in text:
+                  raise SystemExit(f"Shared transformation module is not imported by {notebook_path}")
+          print("Shared transformation imports OK")
+          PY
+
       - name: Install Spark test dependency
-        run: python -m pip install --disable-pip-version-check pyspark==3.5.1
+        run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
 
       - name: Run repository-side unit tests
         run: python -m unittest discover -s tests -v
 
+      - name: Remove generated cache files
+        run: |
+          find . -type d -name "__pycache__" -prune -exec rm -rf {} +
+          find . -type f -name "*.py[co]" -delete
+          find . -type d -name ".pytest_cache" -prune -exec rm -rf {} +
+
       - name: Build clean release archive
         run: |
-          zip -r NovaCart-Release.zip . \
-            -x ".git/*" \
-               "1NOVACART-CASE-STUDY.zip" \
+          zip -r NovaCart-Release.zip . \\
+            -x ".git/*" \\
+               "*/.git/*" \\
+               "__pycache__/*" \\
+               "*/__pycache__/*" \\
+               "*.pyc" \\
+               "*.pyo" \\
+               ".pytest_cache/*" \\
+               "*/.pytest_cache/*" \\
+               ".DS_Store" \\
+               "*/.DS_Store" \\
+               "1NOVACART-CASE-STUDY.zip" \\
                "NovaCart-Release.zip"
+
+      - name: Verify release archive contents
+        run: |
+          python - <<'PY'
+          from zipfile import ZipFile
+
+          required = {
+              "README.md",
+              "bronze_work.ipynb",
+              "silver_work.ipynb",
+              "gold_work.ipynb",
+              "novacart_transformations.py",
+              "novacart_job.json",
+              "NovaCart Sales & Payments Overview.lvdash.json",
+              "deployment/render_novacart_job.py",
+              "requirements-dev.txt",
+          }
+          with ZipFile("NovaCart-Release.zip") as archive:
+              names = set(archive.namelist())
+              missing = required - names
+              if missing:
+                  raise SystemExit(f"Release package is missing required files: {sorted(missing)}")
+              unwanted = [
+                  name for name in names
+                  if "__pycache__/" in name
+                  or name.endswith((".pyc", ".pyo"))
+                  or name.startswith(".git/")
+                  or name == "1NOVACART-CASE-STUDY.zip"
+              ]
+              if unwanted:
+                  raise SystemExit(f"Release package contains generated or legacy files: {unwanted}")
+              print(f"Release package OK: {len(names)} entries, required files present, no cache/legacy files")
+          PY
 
       - name: Upload release archive
         uses: actions/upload-artifact@v7
