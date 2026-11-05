@@ -124,7 +124,7 @@ The notebooks use separate entity progress for orders, products, and payments in
 - Bronze source tables follow the <entity>_raw naming pattern in bronze_schema (for example, orders_raw).
 - Silver current-state targets include orders_transformed, products_transformed, and payments_transformed in silver_schema.
 - Bronze records ingestion metadata, including a Bronze run identifier and ingestion timestamp, to support traceability and incremental handoff. It normalizes source timestamps to milliseconds before applying the timestamp-plus-primary-key cursor and rejects null cursor components before filtering.
-- Silver records a Silver run identifier on processed current-state rows so Gold can identify rows associated with unprocessed Silver runs. Quarantine records use a deterministic `quarantine_id` derived from entity key plus source change timestamp so retries merge the same rejected source version instead of appending a duplicate.
+- Silver records a Silver run identifier on processed current-state rows so Gold can identify rows associated with unprocessed Silver runs. `*_transformed` tables represent the last-known-good valid state: an invalid newer source version is retained in the cleaned/quarantine path and does not overwrite the prior valid transformed row. Quarantine records use a deterministic `quarantine_id` derived from entity key plus source change timestamp so retries merge the same rejected source version instead of appending a duplicate.
 - Confirm exact audit-column spellings and complete target schemas against the notebook definitions when provisioning; this dictionary intentionally does not invent unverified target columns.
 ## Business metric definitions
 
@@ -137,7 +137,7 @@ The current Gold notebook implements the following definitions. Treat the status
 | Paid amount | Sum of valid payment amounts whose normalized status is one of `PAID`, `SUCCESS`, `SUCCEEDED`, `SUCCESSFUL`, `COMPLETED`, or `SETTLED`; multiple successful payment records are summed per order |
 | Order payment completion | `paid_amount / order_amount` when order amount is positive; otherwise zero |
 | Average payment completion | Average of the per-order completion ratio within each category (an unweighted average of order ratios) |
-| Payment failure rate | Payment-grain count of normalized `FAILED` records divided by all payment records joined to orders and products in the category; pending and other non-`FAILED` statuses remain in the denominator |
+| Payment failure rate | Payment-grain count of normalized `FAILED` records in `payments_cleaned` divided by all cleaned payment attempts with a non-null status joined to orders and products in the category; pending and other non-`FAILED` statuses remain in the denominator, even when an attempt's amount is quarantined |
 
 Do not use metric labels interchangeably. In particular, the average of per-order completion ratios is not generally equal to `SUM(paid_amount) / SUM(order_amount)`. Refunds, partial-payment reversals, and statuses outside the explicit success/failure vocabulary need a separate business rule before inclusion.
 
