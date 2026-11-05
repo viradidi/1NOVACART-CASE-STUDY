@@ -24,9 +24,9 @@ def render_job(
     warehouse_id: str,
 ) -> dict[str, Any]:
     """Return a validated job definition with target-workspace paths and IDs."""
-    root = "/" + workspace_root.strip("/")
-    if not root.startswith("/"):
+    if not workspace_root.startswith("/"):
         raise ValueError("workspace_root must be an absolute workspace path")
+    root = "/" + workspace_root.strip("/")
     if any(not value.strip() for value in (dashboard_id, alert_id, warehouse_id)):
         raise ValueError("dashboard_id, alert_id, and warehouse_id are required")
 
