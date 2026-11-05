@@ -4,6 +4,24 @@ This guide explains how to recreate the NovaCart case-study environment from the
 
 > **Project status: WORKING IMPLEMENTATION.** NovaCart was implemented and run in its original Azure Databricks environment. That workspace was later deleted to control costs, so the project is not currently hosted. This guide covers restoring the cloud environment if a live demonstration or regression run is needed. Cloud resource names, IDs, permissions, networking, and credentials must be configured for the target environment.
 
+## 0. Render the workspace-specific job definition
+
+The committed `novacart_job.json` is intentionally a sanitized template. Do not replace its placeholders with invented IDs or commit a workspace-specific export containing personal resource identifiers.
+
+After creating the target notebooks, dashboard, SQL alert, and SQL warehouse, render a job definition using the real identifiers from that workspace:
+
+```bash
+python deployment/render_novacart_job.py \
+  --template novacart_job.json \
+  --workspace-root /Workspace/Shared/NovaCart \
+  --dashboard-id "<DASHBOARD_ID>" \
+  --alert-id "<ALERT_ID>" \
+  --warehouse-id "<WAREHOUSE_ID>" \
+  --output novacart_job.rendered.json
+```
+
+The renderer rewrites the three notebook paths under the selected workspace root, injects the dashboard/alert/warehouse IDs, checks required tasks and dependencies, and preserves single-run concurrency. The generated file is environment-specific; keep it out of source control unless the target IDs are deliberately non-sensitive and intended to be public. The renderer does not create Databricks resources or prove that the IDs exist.
+
 ## 1. Deployment overview
 
 The intended flow is:
