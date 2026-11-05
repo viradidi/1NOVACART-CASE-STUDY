@@ -123,8 +123,8 @@ The notebooks use separate entity progress for orders, products, and payments in
 
 - Bronze source tables follow the <entity>_raw naming pattern in bronze_schema (for example, orders_raw).
 - Silver current-state targets include orders_transformed, products_transformed, and payments_transformed in silver_schema.
-- Bronze records ingestion metadata, including a Bronze run identifier and ingestion timestamp, to support traceability and incremental handoff.
-- Silver records a Silver run identifier on processed current-state rows so Gold can identify rows associated with unprocessed Silver runs.
+- Bronze records ingestion metadata, including a Bronze run identifier and ingestion timestamp, to support traceability and incremental handoff. It normalizes source timestamps to milliseconds before applying the timestamp-plus-primary-key cursor and rejects null cursor components before filtering.
+- Silver records a Silver run identifier on processed current-state rows so Gold can identify rows associated with unprocessed Silver runs. Quarantine records use a deterministic `quarantine_id` derived from entity key plus source change timestamp so retries merge the same rejected source version instead of appending a duplicate.
 - Confirm exact audit-column spellings and complete target schemas against the notebook definitions when provisioning; this dictionary intentionally does not invent unverified target columns.
 ## Business metric definitions
 
