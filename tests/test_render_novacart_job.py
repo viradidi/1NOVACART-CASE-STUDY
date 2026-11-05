@@ -42,6 +42,16 @@ class RenderNovaCartJobTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             render_job(self.template, "/Workspace/Shared/NovaCart", "", "alert", "warehouse")
 
+    def test_rejects_placeholder_resource_ids(self):
+        with self.assertRaises(ValueError):
+            render_job(
+                self.template,
+                "/Workspace/Shared/NovaCart",
+                "REPLACE_WITH_DASHBOARD_ID",
+                "alert",
+                "warehouse",
+            )
+
     def test_rejects_relative_workspace_root(self):
         with self.assertRaises(ValueError):
             render_job(self.template, "Workspace/Shared/NovaCart", "d", "a", "w")
