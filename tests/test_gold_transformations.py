@@ -11,6 +11,7 @@ from novacart_transformations import (
     select_incremental_source_rows,
     derive_impacted_categories,
     normalize_source_timestamp,
+    find_invalid_cursor_rows,
 )
 
 
@@ -29,6 +30,18 @@ class NovaCartGoldTransformationTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.spark.stop()
+
+    def test_bronze_rejects_null_cursor_fields_before_watermark_filtering(self):
+        source = self.spark.createDataFrame(
+            [
+                (1, "2026-01-01 10:00:00"),
+                (2, None),
+                (None, "2026-01-01 10:01:00"),
+            ],
+            ["source_id", "updated_at"],
+        ).withColumn("updated_at", F.col("updated_at").cast("timestamp"))
+        invalid = find_invalid_cursor_rows(source, "source_id", "updated_at")
+        self.assertEqual(invalid.count(), 2)
 
     def test_bronze_timestamp_normalization_truncates_to_milliseconds(self):
         source = self.spark.createDataFrame(
