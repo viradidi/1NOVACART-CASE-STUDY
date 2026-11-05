@@ -8,6 +8,7 @@ from novacart_transformations import (
     clean_order_batch,
     clean_product_batch,
     clean_payment_batch,
+    select_incremental_source_rows,
 )
 
 
@@ -26,6 +27,21 @@ class NovaCartGoldTransformationTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.spark.stop()
+
+    def test_bronze_cursor_includes_greater_keys_at_equal_timestamp(self):
+        source = self.spark.createDataFrame(
+            [
+                (1, "2026-01-01 10:00:00"),
+                (2, "2026-01-01 10:00:00"),
+                (3, "2026-01-01 10:00:00"),
+                (1, "2026-01-01 10:01:00"),
+            ],
+            ["source_id", "updated_at"],
+        ).withColumn("updated_at", __import__("pyspark.sql.functions", fromlist=["col"]).col("updated_at").cast("timestamp"))
+        selected = select_incremental_source_rows(
+            source, "source_id", "updated_at", "2026-01-01 10:00:00", 2
+        )
+        self.assertEqual({row["source_id"] for row in selected.collect()}, {1, 3})
 
     def test_order_cleaning_deduplicates_and_quarantines_invalid_rows(self):
         source = self.spark.createDataFrame(
