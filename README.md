@@ -132,7 +132,7 @@ python -m pip install -r requirements-dev.txt
 python -m unittest discover -s tests -v
 ```
 
-The suite exercises the extracted Spark transformations with local fixtures, the job-template renderer, and the dashboard configuration contract. It does not connect to Azure SQL, Databricks Unity Catalog, Lakehouse Federation, Databricks Jobs, dashboard rendering, or SQL alert delivery.
+The suite exercises Bronze watermark and timestamp rules; Silver money parsing, deduplication and deterministic quarantine identities; Gold payment rollups, category metrics and retry recovery from SCD2 history; plus job-template and dashboard contracts. It does not connect to Azure SQL, Databricks Unity Catalog, Lakehouse Federation, Databricks Jobs, dashboard rendering, or SQL alert delivery.
 
 ## Repository contents
 
