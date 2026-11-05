@@ -42,7 +42,8 @@ The GitHub Actions workflow runs local Spark unit tests against the shared funct
 
 - Bronze: initial-load and timestamp-plus-primary-key cursor boundary behavior, including equal-timestamp tie handling.
 - Silver: order/product/payment standardization, latest-record deduplication, locale-aware numeric parsing (US thousands and decimal-comma formats), validation, deterministic quarantine IDs, and quarantine splitting.
-- Gold: successful-payment amount rollup, deterministic latest-payment selection, one-row-per-category aggregation metrics, payment-grain failure rate, and stale-category identification.
+- Gold: successful-payment amount rollup, deterministic latest-payment selection, one-row-per-category aggregation metrics, payment-grain failure rate, stale-category identification, and recovery of old category assignments from SCD2 history after a partial current-state merge.
+- Bronze timestamp precision: source timestamp normalization to milliseconds, matching the cursor precision policy.
 - Retry behavior: stable quarantine IDs ensure a repeated Silver input resolves to the same quarantine identity; notebook-side Delta MERGE prevents duplicate append records.
 - Configuration: dashboard dataset measures/widget references and job-template rendering/validation.
 
