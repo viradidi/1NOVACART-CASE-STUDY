@@ -359,3 +359,9 @@ def find_invalid_cursor_rows(source_df, primary_key_column, timestamp_column):
     return source_df.filter(
         F.col(primary_key_column).isNull() | F.col(timestamp_column).isNull()
     )
+
+
+def format_snapshot_run_path(run_started_at, gold_run_id):
+    """Build a collision-resistant, filesystem-safe timestamp folder component."""
+    timestamp_component = run_started_at.strftime("%Y-%m-%dT%H-%M-%S.%fZ")
+    return f"{timestamp_component}_{str(gold_run_id)[:8]}"
