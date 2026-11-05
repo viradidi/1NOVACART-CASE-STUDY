@@ -46,6 +46,7 @@ Do not begin by scheduling the job. First validate the source connection, initia
 | `bronze_work.ipynb` | Bronze ingestion workflow |
 | `silver_work.ipynb` | Silver cleansing and transformation workflow |
 | `gold_work.ipynb` | Gold business-modeling workflow |
+| `novacart_transformations.py` | Shared, unit-tested Spark transformations imported by all three notebooks |
 | `NovaCart Sales & Payments Overview.lvdash.json` | Exported dashboard definition |
 | `novacart_job.json` | Saved orchestration configuration |
 | `docs/novacart-architecture.svg` | Architecture diagram |
@@ -104,7 +105,7 @@ Do not blindly run DDL copied from an old workspace without reviewing it for own
 
 ## 7. Import and run the notebooks
 
-Import the three notebook files into the target workspace. Update their source references and configuration first.
+Import the three notebook files and `novacart_transformations.py` into the same target workspace folder. The notebooks resolve the helper module relative to their own workspace folder, so keep the four files together. Update source references and configuration first.
 
 Run them in this order:
 
