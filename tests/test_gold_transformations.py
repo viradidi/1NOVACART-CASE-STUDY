@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime
 
 from pyspark.sql import SparkSession, functions as F
 
@@ -12,6 +13,7 @@ from novacart_transformations import (
     derive_impacted_categories,
     normalize_source_timestamp,
     find_invalid_cursor_rows,
+    format_snapshot_run_path,
 )
 
 
@@ -79,6 +81,14 @@ class NovaCartGoldTransformationTests(unittest.TestCase):
             ).collect()
         }
         self.assertEqual(actual, {"OLD_CATEGORY", "NEW_CATEGORY"})
+
+    def test_gold_snapshot_path_is_filesystem_safe_and_unique_per_run(self):
+        started = datetime(2026, 11, 5, 12, 55, 30, 123456)
+        first = format_snapshot_run_path(started, "12345678-aaaa")
+        second = format_snapshot_run_path(started, "87654321-bbbb")
+        self.assertNotEqual(first, second)
+        self.assertIn("2026-11-05T12-55-30.123456Z", first)
+        self.assertNotIn(":", first)
 
     def test_bronze_cursor_includes_greater_keys_at_equal_timestamp(self):
         source = self.spark.createDataFrame(
