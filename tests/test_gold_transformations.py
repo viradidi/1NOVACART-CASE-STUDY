@@ -5,6 +5,9 @@ from pyspark.sql import SparkSession
 from novacart_transformations import (
     aggregate_payments_by_order,
     calculate_category_metrics,
+    clean_order_batch,
+    clean_product_batch,
+    clean_payment_batch,
 )
 
 
@@ -23,6 +26,57 @@ class NovaCartGoldTransformationTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.spark.stop()
+
+    def test_order_cleaning_deduplicates_and_quarantines_invalid_rows(self):
+        source = self.spark.createDataFrame(
+            [
+                ("o-1", "c-1", "x", "new", "$10.00", "2026-01-01 10:00:00", "2026-01-02 10:00:00", "2026-01-02 10:01:00"),
+                ("o-1", "c-1", "x", " shipped ", "$1,234.50", "2026-01-01 10:00:00", "2026-01-03 10:00:00", "2026-01-03 10:01:00"),
+                ("o-2", None, "y", "pending", "??", "2026-01-01 10:00:00", "2026-01-03 10:00:00", "2026-01-03 10:01:00"),
+            ],
+            ["order_id", "customer_id", "product_id", "order_status", "order_amount", "created_at", "updated_at", "bronze_ingested_at"],
+        )
+        cleaned, good, bad = clean_order_batch(source, "silver-test")
+        self.assertEqual(cleaned.count(), 2)
+        self.assertEqual(good.count(), 1)
+        self.assertEqual(bad.count(), 1)
+        row = good.first()
+        self.assertEqual(row["order_status"], "SHIPPED")
+        self.assertEqual(row["order_amount"], 1234.5)
+        self.assertEqual(row["silver_run_id"], "silver-test")
+
+    def test_product_cleaning_standardizes_values_and_quarantines_bad_price(self):
+        source = self.spark.createDataFrame(
+            [
+                ("p-1", "  phone-case ", "electrnics", "$1,299.99", "2026-01-01 10:00:00", "2026-01-01 10:01:00"),
+                ("p-2", "bad product", "lifestyle", "not-a-price", "2026-01-01 10:00:00", "2026-01-01 10:01:00"),
+            ],
+            ["product_id", "product_name", "category", "price", "updated_at", "bronze_ingested_at"],
+        )
+        cleaned, good, bad = clean_product_batch(source, "silver-test")
+        self.assertEqual(cleaned.count(), 2)
+        self.assertEqual(good.count(), 1)
+        self.assertEqual(bad.count(), 1)
+        row = good.first()
+        self.assertEqual(row["product_name"], "PHONE CASE")
+        self.assertEqual(row["category"], "ELECTRONICS")
+        self.assertEqual(row["price"], 1299.99)
+
+    def test_payment_cleaning_normalizes_status_and_quarantines_missing_order(self):
+        source = self.spark.createDataFrame(
+            [
+                ("pay-1", "o-1", " paid ", "$20.00", "2026-01-01 10:00:00", "2026-01-01 10:01:00"),
+                ("pay-2", None, "failed", "15.00", "2026-01-01 10:00:00", "2026-01-01 10:01:00"),
+            ],
+            ["payment_id", "order_id", "payment_status", "paid_amount", "processed_at", "bronze_ingested_at"],
+        )
+        cleaned, good, bad = clean_payment_batch(source, "silver-test")
+        self.assertEqual(cleaned.count(), 2)
+        self.assertEqual(good.count(), 1)
+        self.assertEqual(bad.count(), 1)
+        row = good.first()
+        self.assertEqual(row["payment_status"], "PAID")
+        self.assertEqual(row["paid_amount"], 20.0)
 
     def test_payment_rollup_counts_only_successful_amounts_and_selects_latest(self):
         payments = self.spark.createDataFrame(
