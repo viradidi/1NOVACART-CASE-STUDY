@@ -16,6 +16,7 @@ from novacart_transformations import (
     format_snapshot_run_path,
     find_scd2_current_duplicates,
     find_gold_orders_missing_current_scd2,
+    _parse_numeric_amount,
 )
 
 
@@ -34,6 +35,30 @@ class NovaCartGoldTransformationTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.spark.stop()
+
+    def test_locale_money_parser_accepts_supported_formats_and_rejects_mixed_separators(self):
+        source = self.spark.createDataFrame(
+            [
+                ("100,00",),
+                ("$1,234.56",),
+                ("1.234,56",),
+                ("12.34,56",),
+                ("1,23.45",),
+            ],
+            ["raw_amount"],
+        )
+        parsed = (
+            source
+            .withColumn("amount", _parse_numeric_amount("raw_amount"))
+            .orderBy("raw_amount")
+            .collect()
+        )
+        by_raw = {row["raw_amount"]: row["amount"] for row in parsed}
+        self.assertEqual(by_raw["100,00"], 100.0)
+        self.assertEqual(by_raw["$1,234.56"], 1234.56)
+        self.assertEqual(by_raw["1.234,56"], 1234.56)
+        self.assertIsNone(by_raw["12.34,56"])
+        self.assertIsNone(by_raw["1,23.45"])
 
     def test_bronze_rejects_null_cursor_fields_before_watermark_filtering(self):
         source = self.spark.createDataFrame(
