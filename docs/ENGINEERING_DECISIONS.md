@@ -284,3 +284,26 @@ These questions separate a sound architectural pattern from a guarantee that mus
 ## Summary
 
 NovaCart demonstrates design patterns for layered data processing, incremental state, merge-based transformations, historical modeling, impacted-entity analytics, and scheduled orchestration. Their correctness depends on explicit data contracts, watermark semantics, idempotency, reconciliation, and recovery tests. The saved artifacts document the intended implementation; production-level guarantees should only be claimed when supported by repeatable evidence.
+
+
+## 13. Last-known-good Silver current state
+
+**Decision:** Merge only validated records into the Silver `*_transformed` current-state tables. Retain newer invalid source versions in the corresponding `*_cleaned` and quarantine tables without replacing the previously valid transformed record.
+
+**Why it helps**
+- A malformed update does not overwrite a usable current-state record with null or invalid business values.
+- The rejected source version and quality reason remain available for investigation and correction.
+- Downstream Gold models continue from the last accepted state while the invalid version is remediated.
+
+**Trade-offs**
+- A transformed record can be stale while a newer invalid version is quarantined. Consumers must not interpret last-known-good as proof that the source's latest version passed validation.
+- Hard deletes are not inferred from the current watermark query; deletion/tombstone handling requires a separate source contract.
+- A corrected source version must be reprocessed through Silver so the current-state table advances.
+
+**Payment-specific boundary:** Gold uses validated `payments_transformed` rows for paid-amount rollups, but uses the cleaned payment-attempt feed for latest payment status and payment failure rate. This allows a failed attempt with an invalid amount to remain visible in payment health without contributing its malformed amount to revenue.
+
+**Validation evidence to capture**
+- Start with a valid current record, then provide a newer invalid version for the same business key.
+- Confirm the prior transformed row remains the last-known-good state.
+- Confirm the invalid version appears once in quarantine and is identified by a stable `quarantine_id`.
+- Correct the source version and confirm the transformed table advances after the valid reprocessing run.
