@@ -116,7 +116,7 @@ These are recommended tests, not a claim that every case has already been exerci
 - Identify orders affected by product changes through the relevant product-to-order relationship.
 - Derive impacted categories from both the pre-merge Gold rows and the new Gold delta.
 - Recompute the old and new categories after the order-grain Gold merge; remove an obsolete category row when no orders remain.
-- Calculate payment failure rate at payment grain.
+- Calculate payment failure rate at payment grain from `payments_cleaned` (the cleaned attempt feed), excluding null statuses but retaining attempts whose amounts are quarantined. Use `payments_transformed` for validated paid-amount rollups.
 - Gold checkpoints are maintained independently for orders, products, and payments and track Silver processing-control timestamps/run IDs, not a shared source business timestamp. Gold identifies current Silver rows tagged with unprocessed Silver run IDs, allowing it to detect source changes even when the source timestamp is late or behind a prior business timestamp.
 - Use periodic full reconciliation or a controlled full rebuild as a recovery option when practical.
 
@@ -135,7 +135,7 @@ These are recommended tests, not a claim that every case has already been exerci
 
 **Trade-offs**
 - The published Gold fact is one row per order. Payments are aggregated by order before joining, so payment multiplicity cannot multiply order rows.
-- `paid_amount` includes only payment rows whose normalized status is one of `PAID`, `SUCCESS`, `SUCCEEDED`, `SUCCESSFUL`, `COMPLETED`, or `SETTLED`. Confirm these values against the source system and extend the mapping only with an explicit business decision.
+- `paid_amount` includes only validated payment rows whose normalized status is one of `PAID`, `SUCCESS`, `SUCCEEDED`, `SUCCESSFUL`, `COMPLETED`, or `SETTLED`. Confirm these values against the source system and extend the mapping only with an explicit business decision. The latest payment ID/status and payment failure-rate metric use the cleaned attempt feed so an attempt with an invalid amount is still visible in payment health.
 - `payment_id` and `payment_status` describe the latest payment record; they are not a replacement for payment-grain analysis.
 - Category payment-failure rate is calculated from individual Silver payment rows, not from the one-row-per-order Gold fact.
 - Product attributes represent the current Silver product state, not necessarily the product values at order time.
