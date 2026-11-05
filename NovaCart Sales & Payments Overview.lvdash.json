@@ -108,16 +108,31 @@
         "dimensions": [
           {
             "expr": "category"
+          },
+          {
+            "expr": "total_orders"
+          },
+          {
+            "expr": "Gross_Merchandise_Value"
+          },
+          {
+            "expr": "Total_Paid_Amount"
+          },
+          {
+            "expr": "Average_Payment_Completion_Ratio"
+          },
+          {
+            "expr": "Payment_Failure_Rate"
           }
         ],
         "measures": [
           {
-            "name": "total_orders",
+            "name": "total_category_orders",
             "expr": "SUM(total_orders)",
             "displayName": "Total Orders"
           },
           {
-            "name": "gmv",
+            "name": "category_gmv",
             "expr": "SUM(Gross_Merchandise_Value)",
             "displayName": "Gross Merchandise Value",
             "format": {
@@ -127,7 +142,7 @@
             }
           },
           {
-            "name": "total_paid",
+            "name": "category_paid_amount",
             "expr": "SUM(Total_Paid_Amount)",
             "displayName": "Total Paid",
             "format": {
@@ -137,7 +152,7 @@
             }
           },
           {
-            "name": "average_payment_completion_ratio",
+            "name": "category_average_payment_completion",
             "expr": "AVG(Average_Payment_Completion_Ratio)",
             "displayName": "Average Payment Completion",
             "format": {
@@ -149,7 +164,7 @@
             }
           },
           {
-            "name": "payment_failure_rate",
+            "name": "category_payment_failure_rate",
             "expr": "AVG(Payment_Failure_Rate)",
             "displayName": "Payment Failure Rate",
             "format": {
