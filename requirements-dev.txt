@@ -1,0 +1,2 @@
+# Local Spark unit tests require Java 17+.
+pyspark==3.5.1
