@@ -186,7 +186,7 @@ def clean_product_batch(products_inc, silver_run_id):
             .otherwise(F.upper(F.trim(F.col("category")))),
         )
         .withColumn("price", F.trim(F.col("price")))
-        .withColumn("price", F.regexp_replace(F.col("price"), r"\\$", ""))
+        .withColumn("price", F.regexp_replace(F.col("price"), r"\$", ""))
         .withColumn("price", F.regexp_replace(F.col("price"), r",", ""))
         .withColumn("price", F.regexp_replace(F.col("price"), r" ", ""))
         .withColumn("price", F.expr("try_cast(price as double)"))
@@ -235,7 +235,7 @@ def clean_payment_batch(payments_inc, silver_run_id):
         .withColumn("payment_status", F.upper(F.trim(F.col("payment_status"))))
         .withColumn("payment_status", F.when(F.col("payment_status") == "", F.lit(None)).otherwise(F.col("payment_status")))
         .withColumn("paid_amount", F.trim(F.col("paid_amount")))
-        .withColumn("paid_amount", F.regexp_replace(F.col("paid_amount"), r"\\$", ""))
+        .withColumn("paid_amount", F.regexp_replace(F.col("paid_amount"), r"\$", ""))
         .withColumn("paid_amount", F.regexp_replace(F.col("paid_amount"), r",", ""))
         .withColumn("paid_amount", F.regexp_replace(F.col("paid_amount"), r" ", ""))
         .withColumn("paid_amount", F.expr("try_cast(paid_amount as double)"))
