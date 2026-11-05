@@ -117,11 +117,22 @@ The project is presented as a working implementation. The validation plan is the
 
 ## Release package and CI evidence
 
-The repository includes a GitHub Actions workflow that validates the exported notebook/job/dashboard JSON, checks the detailed architecture SVG and README documentation links, runs local-Spark transformation tests for Bronze, Silver, and Gold, validates the dashboard and job-template contracts, and builds a clean `NovaCart-Release.zip` artifact. The latest recorded packaging run completed successfully: [view the successful GitHub Actions run](https://github.com/viradidi/1NOVACART-CASE-STUDY/actions/runs/41314575447). Download the `NovaCart-Release` artifact from that run; GitHub retains workflow artifacts for 30 days. This is packaging and structural validation evidence, not a live execution of the Databricks pipeline. See the [release package guide](docs/RELEASE_PACKAGE.md).
+The repository includes a GitHub Actions workflow that validates notebook JSON and Python cell syntax, job/dashboard JSON, both architecture SVGs, README documentation links, and the shared-module imports. It then runs local-Spark transformation tests for Bronze, Silver, and Gold, checks job/dashboard contracts, and builds and inspects a clean `NovaCart-Release.zip` artifact. The latest recorded packaging run completed successfully: [view the successful GitHub Actions run](https://github.com/viradidi/1NOVACART-CASE-STUDY/actions/runs/41314575447). Download the `NovaCart-Release` artifact from that run; GitHub retains workflow artifacts for 30 days. This is packaging and structural validation evidence, not a live execution of the Databricks pipeline. See the [release package guide](docs/RELEASE_PACKAGE.md).
 
 
 
 **Evidence boundary:** the dashboard JSON is a configuration export, not a rendered screenshot. The category-performance dataset now declares explicit business measures, and CI checks the dashboard contract. The notebook exports still contain no saved cell outputs; CI now tests dashboard configuration and job-template rendering, but does not execute Spark transformations. See the [artifact audit](docs/ARTIFACT_AUDIT.md) for the remaining live-environment evidence requirements.
+
+## Local repository validation
+
+The repository-side test suite runs with Python 3.11, Java 17, and the pinned PySpark dependency:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m unittest discover -s tests -v
+```
+
+The suite exercises the extracted Spark transformations with local fixtures, the job-template renderer, and the dashboard configuration contract. It does not connect to Azure SQL, Databricks Unity Catalog, Lakehouse Federation, Databricks Jobs, dashboard rendering, or SQL alert delivery.
 
 ## Repository contents
 
