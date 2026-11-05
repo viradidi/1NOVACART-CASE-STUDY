@@ -58,7 +58,7 @@ The Bronze workflow uses source-specific timestamp and primary-key tracking, wit
 
 ### 2. Silver transformations
 
-The Silver workflow prepares data for business use through cleaning, standardization, deduplication, data-quality handling, and incremental Delta `MERGE` operations. Processing metadata is maintained to support incremental downstream work.
+The Silver workflow prepares data for business use through cleaning, locale-aware amount parsing, standardization, deduplication, data-quality handling, and incremental Delta `MERGE` operations. Valid transformed tables preserve the last-known-good state when a newer source version is invalid; the invalid version remains visible in cleaned/quarantine tables. Processing metadata is maintained to support incremental downstream work.
 
 ### 3. Gold analytics
 
@@ -71,7 +71,7 @@ The Gold workflow identifies changed entities and updates curated datasets. Its 
 | `category_performance` | Category-level commercial and payment metrics |
 | Databricks Volume snapshots | Latest and timestamped Parquet exports |
 
-The category-performance model includes total orders, GMV, paid amount, average payment completion, and payment failure rate. Metric definitions and edge-case handling should be aligned with the SQL and notebook implementation.
+The category-performance model includes total orders, GMV, paid amount, average payment completion, and payment failure rate. Paid amounts use validated successful payment rows; payment-health metrics use the cleaned attempt feed so a failed attempt with a quarantined amount still contributes to failure rate. See the data dictionary for exact definitions.
 
 ## Orchestration
 
