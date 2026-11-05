@@ -103,6 +103,26 @@ Before execution:
 
 Do not blindly run DDL copied from an old workspace without reviewing it for ownership, permissions, and resource names.
 
+## 6A. Existing quarantine-table migration
+
+The current Silver notebook writes quarantine rows with a deterministic `quarantine_id`. A newly created quarantine table receives this column automatically on its first write. If a target workspace already contains quarantine tables from an older version, migrate them before running the updated Silver notebook.
+
+For each existing table, add the nullable column and populate it from the source business key and source change timestamp. Example for orders:
+
+```sql
+ALTER TABLE adb_datatocrunchproject.silver_schema.orders_quarantine
+ADD COLUMNS (quarantine_id STRING);
+
+UPDATE adb_datatocrunchproject.silver_schema.orders_quarantine
+SET quarantine_id = sha2(
+  concat_ws('||', CAST(order_id AS STRING), CAST(updated_at AS STRING)),
+  256
+)
+WHERE quarantine_id IS NULL;
+```
+
+Apply the same pattern to `products_quarantine` using `product_id` and `updated_at`, and to `payments_quarantine` using `payment_id` and `processed_at`. Before running the updated notebook, verify that every existing quarantine row has a non-null ID and inspect any duplicate IDs. Resolve duplicates according to the retained source-version policy. The notebook refuses to write to an old quarantine schema that lacks this ID rather than reverting to append-only behavior.
+
 ## 7. Import and run the notebooks
 
 Import the three notebook files and `novacart_transformations.py` into the same target workspace folder. The notebooks resolve the helper module relative to their own workspace folder, so keep the four files together. Update source references and configuration first.
