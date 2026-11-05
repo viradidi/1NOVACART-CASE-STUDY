@@ -119,6 +119,10 @@ The project is presented as a working implementation. The validation plan is the
 
 The repository includes a GitHub Actions workflow that validates the exported notebook/job/dashboard JSON, checks the detailed architecture SVG and README documentation links, runs repository-side unit tests for the Databricks job renderer, and builds a clean `NovaCart-Release.zip` artifact. The latest recorded packaging run completed successfully: [view the successful GitHub Actions run](https://github.com/viradidi/1NOVACART-CASE-STUDY/actions/runs/41314575447). Download the `NovaCart-Release` artifact from that run; GitHub retains workflow artifacts for 30 days. This is packaging and structural validation evidence, not a live execution of the Databricks pipeline. See the [release package guide](docs/RELEASE_PACKAGE.md).
 
+
+
+**Evidence boundary:** the dashboard JSON is a configuration export, not a rendered screenshot. The category-performance dataset now declares explicit business measures, and CI checks the dashboard contract. The notebook exports still contain no saved cell outputs; CI now tests dashboard configuration and job-template rendering, but does not execute Spark transformations. See the [artifact audit](docs/ARTIFACT_AUDIT.md) for the remaining live-environment evidence requirements.
+
 ## Repository contents
 
 - `bronze_work.ipynb`, `silver_work.ipynb`, `gold_work.ipynb` — layered processing notebooks.
