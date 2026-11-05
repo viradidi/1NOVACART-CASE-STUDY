@@ -352,3 +352,10 @@ def normalize_source_timestamp(source_df, timestamp_column):
         timestamp_column,
         F.date_trunc("MILLISECOND", F.col(timestamp_column).cast("timestamp")),
     )
+
+
+def find_invalid_cursor_rows(source_df, primary_key_column, timestamp_column):
+    """Return source rows that cannot participate in the composite Bronze cursor."""
+    return source_df.filter(
+        F.col(primary_key_column).isNull() | F.col(timestamp_column).isNull()
+    )
