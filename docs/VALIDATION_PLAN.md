@@ -36,6 +36,17 @@ This plan defines repeatable acceptance checks for the NovaCart incremental lake
 | VAL-17 | Upstream task failure | Cause a controlled upstream failure | Dependent tasks do not execute as though prerequisites succeeded | Job graph and task statuses |
 | VAL-18 | Dashboard/alert | Refresh dashboard and test an alert using an approved test condition | Dashboard reflects the validated Gold data and alert behavior matches its condition | Screenshot, query result, test notification record |
 
+## Repository-side automated transformation tests
+
+The GitHub Actions workflow runs local Spark unit tests against the shared functions imported by the Bronze, Silver, and Gold notebooks. Current automated coverage includes:
+
+- Bronze: initial-load and timestamp-plus-primary-key cursor boundary behavior, including equal-timestamp tie handling.
+- Silver: order/product/payment standardization, latest-record deduplication, numeric conversion, validation, and quarantine splitting.
+- Gold: successful-payment amount rollup, deterministic latest-payment selection, one-row-per-category aggregation metrics, payment-grain failure rate, and stale-category identification.
+- Configuration: dashboard dataset measures/widget references and job-template rendering/validation.
+
+These tests run with local Spark; they do not exercise Databricks Unity Catalog, Lakehouse Federation, Delta transaction behavior, workspace permissions, the actual Databricks Job service, dashboard rendering, or SQL alert delivery. Keep those as live-environment acceptance tests below.
+
 ## Core data-quality assertions
 
 Adapt names and policies to the actual notebook implementation before execution.
