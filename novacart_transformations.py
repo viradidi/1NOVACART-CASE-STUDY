@@ -320,3 +320,35 @@ def select_incremental_source_rows(source_df, primary_key_column, timestamp_colu
             & (F.col(primary_key_column).cast("long") > F.lit(int(last_successful_pk)))
         )
     )
+
+
+def derive_impacted_categories(current_gold_df, gold_delta_df, impacted_order_ids, scd2_history_df=None):
+    """Retain old categories across retries by consulting current Gold and SCD2 history."""
+    categories = gold_delta_df.select("category").filter(F.col("category").isNotNull())
+    if current_gold_df is not None:
+        current_categories = (
+            current_gold_df
+            .join(impacted_order_ids, "order_id", "inner")
+            .select("category")
+            .filter(F.col("category").isNotNull())
+        )
+        categories = categories.unionByName(current_categories)
+
+    if scd2_history_df is not None:
+        historical_categories = (
+            scd2_history_df
+            .join(impacted_order_ids, "order_id", "inner")
+            .select("category")
+            .filter(F.col("category").isNotNull())
+        )
+        categories = categories.unionByName(historical_categories)
+
+    return categories.distinct()
+
+
+def normalize_source_timestamp(source_df, timestamp_column):
+    """Normalize source timestamps to millisecond precision before cursor comparison."""
+    return source_df.withColumn(
+        timestamp_column,
+        F.date_trunc("MILLISECOND", F.col(timestamp_column).cast("timestamp")),
+    )
