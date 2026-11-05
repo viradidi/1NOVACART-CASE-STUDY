@@ -115,20 +115,7 @@ jobs:
           find . -type d -name ".pytest_cache" -prune -exec rm -rf {} +
 
       - name: Build clean release archive
-        run: |
-          zip -r NovaCart-Release.zip . \
-            -x ".git/*" \
-               "*/.git/*" \
-               "__pycache__/*" \
-               "*/__pycache__/*" \
-               "*.pyc" \
-               "*.pyo" \
-               ".pytest_cache/*" \
-               "*/.pytest_cache/*" \
-               ".DS_Store" \
-               "*/.DS_Store" \
-               "1NOVACART-CASE-STUDY.zip" \
-               "NovaCart-Release.zip"
+        run: zip -r NovaCart-Release.zip . -x ".git/*" "*/.git/*" "__pycache__/*" "*/__pycache__/*" "*.pyc" "*.pyo" ".pytest_cache/*" "*/.pytest_cache/*" ".DS_Store" "*/.DS_Store" "1NOVACART-CASE-STUDY.zip" "NovaCart-Release.zip"
 
       - name: Verify release archive contents
         run: |
