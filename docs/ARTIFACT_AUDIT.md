@@ -124,3 +124,12 @@ The strengthened CI checks notebook Python syntax, shared-module imports, both a
 The Gold notebook now initializes the SCD2 table before the current-state Gold merge when needed, then derives the impacted category set after the SCD2 update from the current Gold rows, the new Gold delta, and all historical categories for impacted orders in `orders_information_scd2`. This preserves the old category as durable evidence if a retry starts after the current-state merge has already replaced the prior category.
 
 A local Spark regression test covers the recovery condition where current Gold already contains the new category but SCD2 history retains both old and new categories. The test asserts that both categories remain in the retry's impacted set. This tests the extracted selection helper; full notebook failure injection and Delta transaction behavior still need a live Databricks run.
+
+
+## 10. Payment attempt versus valid payment semantics
+
+Gold now uses two distinct Silver payment feeds deliberately:
+- `payments_transformed` supplies validated current payment rows for paid-amount rollups.
+- `payments_cleaned` supplies the latest cleaned attempt status and payment-grain failure-rate population, including attempts whose amount is quarantined. Rows with a null payment status are excluded from the failure-rate denominator.
+
+The Gold local Spark tests cover this separation: a failed attempt with a null amount is still the latest payment status, is counted in payment failure rate, and does not contribute to paid amount. This keeps payment-health signals from disappearing merely because an amount field failed validation.
