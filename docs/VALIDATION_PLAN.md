@@ -209,3 +209,13 @@ A reviewable validation result includes:
 7. Final status, reviewer, unresolved limitations, and follow-up issue.
 
 Keep code-review conclusions separate from runtime outcomes. Static inspection can identify risks or show that a test is defined; it cannot establish that a scenario passed in a live Databricks environment. Because the original workspace was decommissioned, these additional scenarios remain planned until executed after redeployment.
+
+
+## Additional repository and deployment checks
+
+| Scenario | Procedure | Expected result |
+|---|---|---|
+| Invalid update after valid state | Start with one valid current entity row, then submit a newer source version with a malformed amount or required field | Prior transformed row remains last-known-good; invalid source version is cleaned/quarantined and has a stable quarantine ID |
+| Payment health with bad amount | Include a FAILED payment attempt whose amount cannot be parsed | Attempt remains in failure-rate numerator/denominator when status is non-null; malformed amount does not contribute to paid revenue |
+| SCD2 integrity | After a Gold merge, inspect current history versions and compare keys with current Gold orders | No order has multiple current SCD2 rows; every current Gold order has one current SCD2 row |
+| Snapshot folder uniqueness | Start two Gold attempts within the same second | Each run writes to a unique timestamp-plus-run-ID historical folder |
