@@ -180,8 +180,17 @@ def clean_order_batch(orders_inc, silver_run_id):
         .withColumn("order_dow", F.date_format("created_at", "E"))
     )
     good = validated.filter(F.col("to_be_verified_by_orders_team") == "No Issues")
-    bad = validated.filter(F.col("to_be_verified_by_orders_team") != "No Issues").withColumn(
-        "quarantine_ts", F.current_timestamp()
+    bad = (
+        validated
+        .filter(F.col("to_be_verified_by_orders_team") != "No Issues")
+        .withColumn("quarantine_ts", F.current_timestamp())
+        .withColumn(
+            "quarantine_id",
+            F.sha2(
+                F.concat_ws("||", F.col("order_id").cast("string"), F.col("updated_at").cast("string")),
+                256,
+            ),
+        )
     )
     return cleaned, good, bad
 
@@ -232,10 +241,21 @@ def clean_product_batch(products_inc, silver_run_id):
     )
     if "price_raw" in good.columns:
         good = good.drop("price_raw")
-    bad = validated.filter(
-        (F.col("to_be_verified_by_products_team") != "No Issues")
-        | (F.col("check_product_price") == "invalid_price")
-    ).withColumn("quarantine_ts", F.current_timestamp())
+    bad = (
+        validated
+        .filter(
+            (F.col("to_be_verified_by_products_team") != "No Issues")
+            | (F.col("check_product_price") == "invalid_price")
+        )
+        .withColumn("quarantine_ts", F.current_timestamp())
+        .withColumn(
+            "quarantine_id",
+            F.sha2(
+                F.concat_ws("||", F.col("product_id").cast("string"), F.col("updated_at").cast("string")),
+                256,
+            ),
+        )
+    )
     return cleaned, good, bad
 
 
@@ -272,8 +292,17 @@ def clean_payment_batch(payments_inc, silver_run_id):
         )
     )
     good = validated.filter(F.col("to_be_verified_by_payments_team") == "No Issues")
-    bad = validated.filter(F.col("to_be_verified_by_payments_team") != "No Issues").withColumn(
-        "quarantine_ts", F.current_timestamp()
+    bad = (
+        validated
+        .filter(F.col("to_be_verified_by_payments_team") != "No Issues")
+        .withColumn("quarantine_ts", F.current_timestamp())
+        .withColumn(
+            "quarantine_id",
+            F.sha2(
+                F.concat_ws("||", F.col("payment_id").cast("string"), F.col("processed_at").cast("string")),
+                256,
+            ),
+        )
     )
     return cleaned, good, bad
 
