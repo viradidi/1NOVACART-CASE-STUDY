@@ -121,6 +121,6 @@ The strengthened CI checks notebook Python syntax, shared-module imports, both a
 
 ## 9. Gold category-move recovery across partial-run retries
 
-The Gold notebook now derives the impacted category set from three sources: categories on the pre-merge current Gold rows, categories in the new Gold delta, and all historical categories for the impacted orders in `orders_information_scd2`. It also initializes the SCD2 table before the current-state Gold merge when the table is missing. This preserves the old category as durable evidence if a run fails after the current-state merge but before category aggregates are recomputed.
+The Gold notebook now initializes the SCD2 table before the current-state Gold merge when needed, then derives the impacted category set after the SCD2 update from the current Gold rows, the new Gold delta, and all historical categories for impacted orders in `orders_information_scd2`. This preserves the old category as durable evidence if a retry starts after the current-state merge has already replaced the prior category.
 
 A local Spark regression test covers the recovery condition where current Gold already contains the new category but SCD2 history retains both old and new categories. The test asserts that both categories remain in the retry's impacted set. This tests the extracted selection helper; full notebook failure injection and Delta transaction behavior still need a live Databricks run.
