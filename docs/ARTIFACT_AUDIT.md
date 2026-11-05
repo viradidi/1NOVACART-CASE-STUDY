@@ -52,7 +52,7 @@ The ZIP is **not a self-contained copy of the entire current GitHub project** be
 The current repository contains all three notebooks:
 
 - [Bronze](../bronze_work.ipynb): 16 cells, 9 code cells.
-- [Silver](../silver_work.ipynb): 26 cells, 17 code cells.
+- [Silver](../silver_work.ipynb): 20 cells, 11 code cells (obsolete one-time backfill and debug query cells removed).
 - [Gold](../gold_work.ipynb): 26 cells, 15 code cells.
 
 The checked-in notebooks contain no saved code-cell outputs. They preserve implementation code, but they do not by themselves prove successful execution or expected row counts.
@@ -102,10 +102,10 @@ These changes improve configuration correctness and deployment reproducibility. 
 
 - **Notebook cell outputs:** the checked-in notebooks still contain no saved outputs. The original workspace has been decommissioned, so genuine execution outputs, row counts, and run metadata cannot be recovered from the notebooks. Capture them during the next live run; do not synthesize notebook output cells.
 - **Dashboard screenshot:** the committed artifact remains a dashboard configuration export. A real screenshot requires importing or recreating the dashboard in a live Databricks workspace and rendering it against approved test data. A generated mockup must not be presented as a real dashboard screenshot.
-- **Transformation tests:** local Spark tests now execute the shared Bronze cursor, Silver order/product/payment cleaning and quarantine identity, Gold payment rollup and category metrics. These are unit tests of extracted functions, not a live Delta MERGE / Unity Catalog / Lakehouse Federation integration test.
+- **Transformation tests:** local Spark tests execute the shared Bronze cursor/timestamp/null-key helpers; Silver order, product, and payment cleaning, locale-aware amount parsing, and quarantine identity; Gold payment rollups, payment-attempt health metrics, category aggregation/retry helpers, SCD2 integrity helpers, and snapshot path formatting. Configuration tests cover the dashboard export and job-template renderer. These are tests of extracted functions and static configuration, not a full live Delta MERGE / Unity Catalog / Lakehouse Federation integration test.
 - **Live validation:** the workspace-specific job renderer has not deployed or run a Databricks job. Notebook execution, dashboard refresh, alert delivery, and the validation-plan scenarios remain blocked until the environment is recreated.
 
-The repository-side transformation coverage is now implemented and wired into GitHub Actions with Java 17 and PySpark 3.5.1. The next milestone is confirming the workflow run is green, then performing full Databricks/Delta integration and evidence capture when the workspace is recreated.
+The repository-side test suite is wired into GitHub Actions with Java 17 and PySpark 3.5.1. Check the workflow run for the current \`main\` commit before presenting CI as green. Full Databricks/Delta integration, notebook outputs, dashboard screenshots, and runtime evidence require the workspace to be recreated.
 
 
 ## 8. Additional repository verification and hardening
