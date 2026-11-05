@@ -9,6 +9,8 @@ from novacart_transformations import (
     clean_product_batch,
     clean_payment_batch,
     select_incremental_source_rows,
+    derive_impacted_categories,
+    normalize_source_timestamp,
 )
 
 
@@ -27,6 +29,43 @@ class NovaCartGoldTransformationTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.spark.stop()
+
+    def test_bronze_timestamp_normalization_truncates_to_milliseconds(self):
+        source = self.spark.createDataFrame(
+            [("2026-01-01 10:00:00.123456",), ("2026-01-01 10:00:00.999999",)],
+            ["updated_at"],
+        )
+        normalized = normalize_source_timestamp(source, "updated_at")
+        values = sorted(row["updated_at"].strftime("%H:%M:%S.%f") for row in normalized.collect())
+        self.assertEqual(values, ["10:00:00.123000", "10:00:00.999000"])
+
+    def test_impacted_categories_survive_retry_after_current_gold_merge(self):
+        current_gold_after_merge = self.spark.createDataFrame(
+            [("o-1", "NEW_CATEGORY")],
+            ["order_id", "category"],
+        )
+        gold_delta = self.spark.createDataFrame(
+            [("o-1", "NEW_CATEGORY")],
+            ["order_id", "category"],
+        )
+        impacted_orders = self.spark.createDataFrame([("o-1",)], ["order_id"])
+        scd2_history = self.spark.createDataFrame(
+            [
+                ("o-1", "OLD_CATEGORY", False),
+                ("o-1", "NEW_CATEGORY", True),
+            ],
+            ["order_id", "category", "is_current"],
+        )
+        actual = {
+            row["category"]
+            for row in derive_impacted_categories(
+                current_gold_after_merge,
+                gold_delta,
+                impacted_orders,
+                scd2_history,
+            ).collect()
+        }
+        self.assertEqual(actual, {"OLD_CATEGORY", "NEW_CATEGORY"})
 
     def test_bronze_cursor_includes_greater_keys_at_equal_timestamp(self):
         source = self.spark.createDataFrame(
