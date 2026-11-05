@@ -265,3 +265,18 @@ def clean_payment_batch(payments_inc, silver_run_id):
         "quarantine_ts", F.current_timestamp()
     )
     return cleaned, good, bad
+
+
+def select_incremental_source_rows(source_df, primary_key_column, timestamp_column, last_successful_ts, last_successful_pk):
+    """Apply NovaCart's deterministic timestamp-plus-primary-key cursor boundary."""
+    if last_successful_ts is None:
+        return source_df
+    if last_successful_pk is None:
+        return source_df.filter(F.col(timestamp_column) > F.lit(last_successful_ts))
+    return source_df.filter(
+        (F.col(timestamp_column) > F.lit(last_successful_ts))
+        | (
+            (F.col(timestamp_column) == F.lit(last_successful_ts))
+            & (F.col(primary_key_column).cast("long") > F.lit(int(last_successful_pk)))
+        )
+    )
