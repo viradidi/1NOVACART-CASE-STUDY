@@ -117,3 +117,10 @@ Silver quarantine records now receive a deterministic `quarantine_id` derived fr
 The old Silver one-time orders-cleaned backfill and ad-hoc debug query cells have been removed from the scheduled notebook. They were not part of the normal incremental contract and could overwrite the cleaned table with an arbitrarily selected historical duplicate. Gold no longer displays entire changed-order and Gold-delta DataFrames in a scheduled job, avoiding large notebook result payloads.
 
 The strengthened CI checks notebook Python syntax, shared-module imports, both architecture SVGs, test modules, the dashboard/job configuration contracts, local Spark transformation behavior, and the release archive contents. Generated Python caches and the legacy ZIP are excluded from the release package.
+
+
+## 9. Gold category-move recovery across partial-run retries
+
+The Gold notebook now derives the impacted category set from three sources: categories on the pre-merge current Gold rows, categories in the new Gold delta, and all historical categories for the impacted orders in `orders_information_scd2`. It also initializes the SCD2 table before the current-state Gold merge when the table is missing. This preserves the old category as durable evidence if a run fails after the current-state merge but before category aggregates are recomputed.
+
+A local Spark regression test covers the recovery condition where current Gold already contains the new category but SCD2 history retains both old and new categories. The test asserts that both categories remain in the retry's impacted set. This tests the extracted selection helper; full notebook failure injection and Delta transaction behavior still need a live Databricks run.
