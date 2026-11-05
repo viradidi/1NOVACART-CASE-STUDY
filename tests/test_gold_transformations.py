@@ -1,6 +1,6 @@
 import unittest
 
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, functions as F
 
 from novacart_transformations import (
     aggregate_payments_by_order,
@@ -37,7 +37,7 @@ class NovaCartGoldTransformationTests(unittest.TestCase):
                 (1, "2026-01-01 10:01:00"),
             ],
             ["source_id", "updated_at"],
-        ).withColumn("updated_at", __import__("pyspark.sql.functions", fromlist=["col"]).col("updated_at").cast("timestamp"))
+        ).withColumn("updated_at", F.col("updated_at").cast("timestamp"))
         selected = select_incremental_source_rows(
             source, "source_id", "updated_at", "2026-01-01 10:00:00", 2
         )
