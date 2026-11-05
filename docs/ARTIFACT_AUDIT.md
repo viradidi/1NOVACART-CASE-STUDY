@@ -87,7 +87,7 @@ The legacy \`1NOVACART-CASE-STUDY.zip\` remains in the repository as a historica
 
 ## Release readiness and next milestone
 
-The implementation, repository-side transformation tests, dashboard/job contract tests, and clean packaging workflow are committed. The latest successful workflow result should be checked against the current \`main\` commit before making a current CI claim. When the cloud workspace is recreated, run the focused validation scenarios for Delta retry semantics, per-entity checkpoints, initial and incremental loads, Gold reconciliation, SCD2, dashboard refresh, and SQL alert delivery. Those are environment integration and evidence tasks, not missing repository artifacts.
+The implementation, repository-side transformation tests, dashboard/job contract tests, and clean packaging workflow are committed. GitHub Actions run `42069717620` for commit `c33e6c9007ba09a635724f51f597a66c5498ff75` passed on 2026-11-05. Its logs show 20 tests passed, all notebook and Python syntax checks passed, both architecture SVGs parsed, and the release ZIP verification succeeded. When the cloud workspace is recreated, run the focused validation scenarios for Delta retry semantics, per-entity checkpoints, initial and incremental loads, Gold reconciliation, SCD2, dashboard refresh, and SQL alert delivery. Those are environment integration and evidence tasks, not missing repository artifacts.
 
 ## 6. Follow-up hardening after this audit
 
@@ -104,7 +104,7 @@ These changes improve configuration correctness and deployment reproducibility. 
 - **Transformation tests:** local Spark tests execute the shared Bronze cursor/timestamp/null-key helpers; Silver order, product, and payment cleaning, locale-aware amount parsing, and quarantine identity; Gold payment rollups, payment-attempt health metrics, category aggregation/retry helpers, SCD2 integrity helpers, and snapshot path formatting. Configuration tests cover the dashboard export and job-template renderer. These are tests of extracted functions and static configuration, not a full live Delta MERGE / Unity Catalog / Lakehouse Federation integration test.
 - **Live validation:** the workspace-specific job renderer has not deployed or run a Databricks job. Notebook execution, dashboard refresh, alert delivery, and the validation-plan scenarios remain blocked until the environment is recreated.
 
-The repository-side test suite is wired into GitHub Actions with Java 17 and PySpark 3.5.1. Check the workflow run for the current \`main\` commit before presenting CI as green. Full Databricks/Delta integration, notebook outputs, dashboard screenshots, and runtime evidence require the workspace to be recreated.
+The repository-side test suite is wired into GitHub Actions with Java 17 and PySpark 3.5.1. The successful run produced a clean release artifact; full Databricks/Delta integration, notebook outputs, dashboard screenshots, and runtime evidence still require the workspace to be recreated. Full Databricks/Delta integration, notebook outputs, dashboard screenshots, and runtime evidence require the workspace to be recreated.
 
 
 ## 8. Additional repository verification and hardening
