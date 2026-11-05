@@ -14,3 +14,7 @@ __pycache__/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Rendered, workspace-specific Databricks job definitions
+novacart_job.rendered.json
+*.rendered.json
