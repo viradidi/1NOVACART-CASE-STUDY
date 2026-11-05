@@ -1,0 +1,16 @@
+# Python bytecode and local test caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Databricks / notebook local state
+.ipynb_checkpoints/
+.databricks/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
