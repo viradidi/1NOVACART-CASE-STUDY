@@ -14,6 +14,27 @@ SUCCESSFUL_PAYMENT_STATUSES = (
 )
 
 
+def _parse_numeric_amount(column_name: str):
+    """Parse US thousands separators and decimal-comma amounts without inflation."""
+    raw = F.regexp_replace(
+        F.trim(F.col(column_name).cast("string")),
+        r"[$€£\s]",
+        "",
+    )
+    european_thousands_decimal = raw.rlike(r"^[+-]?\d{1,3}(?:\.\d{3})+,\d{1,2}$")
+    decimal_comma = raw.rlike(r"^[+-]?\d+,\d{1,2}$")
+    normalized = (
+        F.when(
+            european_thousands_decimal,
+            F.regexp_replace(F.regexp_replace(raw, r"\.", ""), ",", "."),
+        )
+        .when(decimal_comma, F.regexp_replace(raw, ",", "."))
+        .otherwise(F.regexp_replace(raw, ",", ""))
+    )
+    valid_numeric = normalized.rlike(r"^[+-]?\d+(?:\.\d+)?$")
+    return F.when(valid_numeric, normalized.cast("double")).otherwise(F.lit(None).cast("double"))
+
+
 def aggregate_payments_by_order(payments_df):
     """Return paid-amount rollup and deterministic latest payment descriptors."""
     payment_rollup = (
@@ -129,9 +150,7 @@ def clean_order_batch(orders_inc, silver_run_id):
         orders_inc
         .withColumn("order_status", F.upper(F.trim(F.col("order_status"))))
         .withColumn("order_status", F.when(F.col("order_status") == "", F.lit(None)).otherwise(F.col("order_status")))
-        .withColumn("order_amount", F.regexp_replace(F.col("order_amount"), r"[$, ]", ""))
-        .withColumn("order_amount", F.when(F.trim(F.col("order_amount")).isin("N/A", "NULL", "??", ""), None).otherwise(F.col("order_amount")))
-        .withColumn("order_amount", F.col("order_amount").cast("double"))
+        .withColumn("order_amount", _parse_numeric_amount("order_amount"))
         .withColumn("created_at", F.to_timestamp("created_at"))
         .withColumn("updated_at", F.to_timestamp("updated_at"))
         .withColumn("row_rank", F.row_number().over(order_window))
@@ -185,11 +204,7 @@ def clean_product_batch(products_inc, silver_run_id):
             .when(F.upper(F.trim(F.col("category"))) == "LIFESTYLE", "LIFESTYLE")
             .otherwise(F.upper(F.trim(F.col("category")))),
         )
-        .withColumn("price", F.trim(F.col("price")))
-        .withColumn("price", F.regexp_replace(F.col("price"), r"\$", ""))
-        .withColumn("price", F.regexp_replace(F.col("price"), r",", ""))
-        .withColumn("price", F.regexp_replace(F.col("price"), r" ", ""))
-        .withColumn("price", F.expr("try_cast(price as double)"))
+        .withColumn("price", _parse_numeric_amount("price"))
         .withColumn("updated_at", F.to_timestamp("updated_at"))
         .withColumn("row_rank", F.row_number().over(product_window))
         .filter(F.col("row_rank") == 1)
@@ -234,11 +249,7 @@ def clean_payment_batch(payments_inc, silver_run_id):
         payments_inc
         .withColumn("payment_status", F.upper(F.trim(F.col("payment_status"))))
         .withColumn("payment_status", F.when(F.col("payment_status") == "", F.lit(None)).otherwise(F.col("payment_status")))
-        .withColumn("paid_amount", F.trim(F.col("paid_amount")))
-        .withColumn("paid_amount", F.regexp_replace(F.col("paid_amount"), r"\$", ""))
-        .withColumn("paid_amount", F.regexp_replace(F.col("paid_amount"), r",", ""))
-        .withColumn("paid_amount", F.regexp_replace(F.col("paid_amount"), r" ", ""))
-        .withColumn("paid_amount", F.expr("try_cast(paid_amount as double)"))
+        .withColumn("paid_amount", _parse_numeric_amount("paid_amount"))
         .withColumn("processed_at", F.to_timestamp("processed_at"))
         .withColumn("row_rank", F.row_number().over(payment_window))
         .filter(F.col("row_rank") == 1)
