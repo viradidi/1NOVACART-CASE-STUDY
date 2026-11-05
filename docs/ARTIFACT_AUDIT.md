@@ -73,22 +73,21 @@ The repository's `novacart_job.json` has been changed into a **redeployment temp
 
 ## 5. Automated release packaging
 
-The repository now includes [a GitHub Actions packaging workflow](../.github/workflows/package-novacart-release.yml) and [release-package instructions](RELEASE_PACKAGE.md). On pushes to `main`, or manual dispatch, the workflow:
+The repository includes [a GitHub Actions workflow](../.github/workflows/package-novacart-release.yml) and [release-package instructions](RELEASE_PACKAGE.md). On pushes to \`main\`, or manual dispatch, the workflow:
+- Parses the notebooks, job JSON, and dashboard JSON.
+- Syntax-checks ordinary Python notebook cells, the shared transformation module, deployment renderer, and test modules.
+- Validates both architecture SVGs and README documentation links.
+- Confirms all three notebooks import the shared transformation module.
+- Installs Java 17 and pinned PySpark 3.5.1, then runs the repository-side local Spark and configuration unit tests.
+- Removes Python caches, builds \`NovaCart-Release.zip\`, verifies required files and rejects caches/legacy files, then uploads a 30-day \`NovaCart-Release\` artifact.
 
-- Parses the three notebook exports, job JSON, and dashboard JSON as JSON.
-- Parses `docs/novacart-architecture.svg`.
-- Checks README links targeting `docs/`.
-- Builds `NovaCart-Release.zip`, excluding the legacy root ZIP, the output ZIP itself, and files under `.git/`.
-- Uploads the archive as a `NovaCart-Release` Actions artifact for 30 days.
+This provides automated repository-side validation and clean packaging without requiring a Databricks workspace. It does **not** execute the full Bronze/Silver/Gold notebooks against Databricks, test Delta MERGE transactions or Unity Catalog permissions, connect to Azure SQL through Lakehouse Federation, render/query the live dashboard, or deliver SQL alerts. The ZIP is a temporary Actions artifact, not a committed release archive.
 
-This provides an automated clean-package path without requiring a Databricks workspace. It does **not** execute Bronze/Silver/Gold, validate SQL semantics, verify both architecture SVGs, render or query the dashboard, or prove that the packaged pipeline runs in Databricks. The workflow checks only the architecture SVG named above; the end-to-end SVG is included in the archive but is not currently XML-validated by this workflow. The workflow also uploads a temporary Actions artifact rather than committing a release ZIP to the repository.
-
-The legacy `1NOVACART-CASE-STUDY.zip` remains in the repository as a historical export; it is excluded from the generated clean package. To distribute the current project, use the latest successful `Package NovaCart release` workflow artifact, not the legacy ZIP. Confirm an actual successful workflow run before describing a particular release artifact as generated and available.
+The legacy \`1NOVACART-CASE-STUDY.zip\` remains in the repository as a historical export; it is excluded from the generated clean package. To distribute the current project, use the latest successful \`Package NovaCart release\` workflow artifact, not the legacy ZIP.
 
 ## Release readiness and next milestone
 
-The main implementation, targeted correctness improvements, and automated clean-package workflow are committed. The legacy root ZIP remains for historical reference, but the workflow excludes it and packages the current repository contents into a downloadable Actions artifact. The remaining release step is operational: confirm a successful packaging run and retrieve its artifact when needed. When a cloud workspace is next available, run focused regression scenarios for payment multiplicity, category moves, replay after partial failure, per-entity checkpoints, and Gold reconciliation. Those are follow-up regression checks for the latest changes, not a reclassification of the project as non-working.
-
+The implementation, repository-side transformation tests, dashboard/job contract tests, and clean packaging workflow are committed. The latest successful workflow result should be checked against the current \`main\` commit before making a current CI claim. When the cloud workspace is recreated, run the focused validation scenarios for Delta retry semantics, per-entity checkpoints, initial and incremental loads, Gold reconciliation, SCD2, dashboard refresh, and SQL alert delivery. Those are environment integration and evidence tasks, not missing repository artifacts.
 
 ## 6. Follow-up hardening after this audit
 
