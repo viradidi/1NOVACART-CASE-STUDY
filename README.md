@@ -117,14 +117,14 @@ The project is presented as a working implementation. The validation plan is the
 
 ## Release package and CI evidence
 
-The repository includes a GitHub Actions workflow that validates the exported notebook/job/dashboard JSON, checks the detailed architecture SVG and README documentation links, and builds a clean `NovaCart-Release.zip` artifact. The latest recorded packaging run completed successfully: [view the successful GitHub Actions run](https://github.com/viradidi/1NOVACART-CASE-STUDY/actions/runs/41314575447). Download the `NovaCart-Release` artifact from that run; GitHub retains workflow artifacts for 30 days. This is packaging and structural validation evidence, not a live execution of the Databricks pipeline. See the [release package guide](docs/RELEASE_PACKAGE.md).
+The repository includes a GitHub Actions workflow that validates the exported notebook/job/dashboard JSON, checks the detailed architecture SVG and README documentation links, runs repository-side unit tests for the Databricks job renderer, and builds a clean `NovaCart-Release.zip` artifact. The latest recorded packaging run completed successfully: [view the successful GitHub Actions run](https://github.com/viradidi/1NOVACART-CASE-STUDY/actions/runs/41314575447). Download the `NovaCart-Release` artifact from that run; GitHub retains workflow artifacts for 30 days. This is packaging and structural validation evidence, not a live execution of the Databricks pipeline. See the [release package guide](docs/RELEASE_PACKAGE.md).
 
 ## Repository contents
 
 - `bronze_work.ipynb`, `silver_work.ipynb`, `gold_work.ipynb` — layered processing notebooks.
 - SQL scripts — source table definitions and load examples.
 - `NovaCart Sales & Payments Overview.lvdash.json` — exported dashboard artifact.
-- `novacart_job.json` — saved Databricks Job configuration.
+- `novacart_job.json` — sanitized Databricks Job redeployment template. Render a target-workspace definition with `python deployment/render_novacart_job.py --workspace-root /Workspace/Shared/NovaCart --dashboard-id <id> --alert-id <id> --warehouse-id <id> --output novacart_job.rendered.json`.
 - `docs/` — architecture and engineering documentation.
 - `1NOVACART-CASE-STUDY.zip` — legacy Databricks/Git export; see [the artifact audit](docs/ARTIFACT_AUDIT.md). It contains `.git/` metadata and does not include the current dashboard export or current documentation, so do not use it as the current project bundle.
 
