@@ -17,11 +17,11 @@ class DashboardContractTests(unittest.TestCase):
         measures = {item["name"] for item in dataset["config"]["measures"]}
         self.assertIn("category", dimensions)
         self.assertTrue({
-            "total_orders",
-            "gmv",
-            "total_paid",
-            "average_payment_completion_ratio",
-            "payment_failure_rate",
+            "total_category_orders",
+            "category_gmv",
+            "category_paid_amount",
+            "category_average_payment_completion",
+            "category_payment_failure_rate",
         }.issubset(measures))
         self.assertNotEqual(measures, {"count"})
 
@@ -46,6 +46,7 @@ class DashboardContractTests(unittest.TestCase):
         self.assertIn("category", declared_dimensions)
         self.assertTrue(expected_expressions.issubset(measure_expressions))
         self.assertTrue({"total_orders", "Gross_Merchandise_Value", "Total_Paid_Amount", "Average_Payment_Completion_Ratio", "Payment_Failure_Rate"}.issubset(fields))
+        self.assertTrue(fields.issubset(declared_dimensions), "Every raw table-widget field must be declared as a dataset dimension.")
         self.assertEqual(table["queries"][0]["query"]["datasetName"], dataset["name"])
 
 
