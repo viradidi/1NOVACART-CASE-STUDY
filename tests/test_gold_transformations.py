@@ -63,6 +63,10 @@ class NovaCartGoldTransformationTests(unittest.TestCase):
         self.assertEqual(row["order_amount"], 1234.5)
         self.assertEqual(decimal_comma_row["order_amount"], 50.0)
         self.assertEqual(row["silver_run_id"], "silver-test")
+        first_quarantine_id = bad.first()["quarantine_id"]
+        _, _, retry_bad = clean_order_batch(source, "silver-test")
+        self.assertEqual(retry_bad.first()["quarantine_id"], first_quarantine_id)
+        self.assertEqual(len(first_quarantine_id), 64)
 
     def test_product_cleaning_standardizes_values_and_quarantines_bad_price(self):
         source = self.spark.createDataFrame(
@@ -83,6 +87,7 @@ class NovaCartGoldTransformationTests(unittest.TestCase):
         self.assertEqual(row["category"], "ELECTRONICS")
         self.assertEqual(row["price"], 1299.99)
         self.assertEqual(decimal_comma_row["price"], 15.0)
+        self.assertEqual(len(bad.first()["quarantine_id"]), 64)
 
     def test_payment_cleaning_normalizes_status_and_quarantines_missing_order(self):
         source = self.spark.createDataFrame(
@@ -102,6 +107,7 @@ class NovaCartGoldTransformationTests(unittest.TestCase):
         self.assertEqual(row["payment_status"], "PAID")
         self.assertEqual(row["paid_amount"], 20.0)
         self.assertEqual(decimal_comma_row["paid_amount"], 100.0)
+        self.assertEqual(len(bad.first()["quarantine_id"]), 64)
 
     def test_payment_rollup_counts_only_successful_amounts_and_selects_latest(self):
         payments = self.spark.createDataFrame(
