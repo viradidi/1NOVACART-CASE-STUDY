@@ -11,7 +11,7 @@ This document describes the source entities and the documented analytical output
 | `product_id` | Product identifier | Primary key |
 | `product_name` | Product display name | Source attribute |
 | `category` | Product category | Used for category-level analysis |
-| `price` | Product price | Defined as `VARCHAR(30)` in the supplied source DDL; cast and validate before numeric calculations |
+| `price` | Product price | Defined as `VARCHAR(30)` in the supplied source DDL; locale-aware parsing handles US thousands separators and decimal-comma formats, then validates before numeric calculations |
 | `updated_at` | Last source update timestamp | Used for incremental change detection |
 
 ### Orders
@@ -22,7 +22,7 @@ This document describes the source entities and the documented analytical output
 | `customer_id` | Customer identifier | Avoid exposing real customer data in public examples |
 | `product_id` | Related product identifier | Foreign key to products |
 | `order_status` | Current order status | Define allowed values and handling of unknown values |
-| `order_amount` | Order amount | Defined as `VARCHAR(30)` in the supplied source DDL; validate and cast before aggregation |
+| `order_amount` | Order amount | Defined as `VARCHAR(30)` in the supplied source DDL; locale-aware parsing handles US thousands separators and decimal-comma formats, then validates before aggregation |
 | `created_at` | Order creation timestamp | Business event time |
 | `updated_at` | Last source update timestamp | Used for incremental change detection |
 
@@ -33,7 +33,7 @@ This document describes the source entities and the documented analytical output
 | `payment_id` | Payment identifier | Primary key |
 | `order_id` | Related order identifier | Foreign key to orders |
 | `payment_status` | Payment status | Define success/failure/pending status mapping explicitly |
-| `paid_amount` | Payment amount | Validate and cast before arithmetic |
+| `paid_amount` | Payment amount | Locale-aware parsing handles US thousands separators and decimal-comma formats; invalid strings become null and are quarantined |
 | `processed_at` | Payment processing timestamp | Source change timestamp documented in the source DDL |
 
 ## Layered data model
@@ -128,18 +128,18 @@ The notebooks use separate entity progress for orders, products, and payments in
 - Confirm exact audit-column spellings and complete target schemas against the notebook definitions when provisioning; this dictionary intentionally does not invent unverified target columns.
 ## Business metric definitions
 
-These are recommended documentation contracts. Align each definition with the actual notebook SQL before publishing numbers as verified results.
+The current Gold notebook implements the following definitions. Treat the status vocabulary and reporting grain as explicit business rules when presenting the metrics.
 
-| Metric | Suggested definition | Questions to settle |
-|---|---|---|
-| Total orders | Count of distinct orders in the reporting population | Are cancelled/test orders excluded? Is the grain one row per order? |
-| GMV | Sum of valid order amounts for the agreed order population | Is GMV based on order amount or product price? Which order statuses count? |
-| Paid amount | Sum of qualifying successful payment amounts | How are refunds, partial payments, duplicate payment events, and multiple payments handled? |
-| Payment completion | Paid amount divided by eligible order amount, with a defined zero/null denominator policy | Is the metric capped at 100%, and are overpayments possible? |
-| Payment failure rate | Failed payment attempts divided by all eligible payment attempts | Is the denominator payment attempts or distinct orders? Which statuses are failures? |
-| Average payment completion | Average of the chosen completion measure over the defined reporting grain | Is this an order-level average or a ratio of sums? These produce different results |
+| Metric | Implemented definition |
+|---|---|
+| Total orders | Distinct order count at the one-row-per-order Gold grain |
+| GMV | Sum of positive `order_amount` values; the current logic does not exclude cancelled orders by status |
+| Paid amount | Sum of valid payment amounts whose normalized status is one of `PAID`, `SUCCESS`, `SUCCEEDED`, `SUCCESSFUL`, `COMPLETED`, or `SETTLED`; multiple successful payment records are summed per order |
+| Order payment completion | `paid_amount / order_amount` when order amount is positive; otherwise zero |
+| Average payment completion | Average of the per-order completion ratio within each category (an unweighted average of order ratios) |
+| Payment failure rate | Payment-grain count of normalized `FAILED` records divided by all payment records joined to orders and products in the category; pending and other non-`FAILED` statuses remain in the denominator |
 
-Do not use metric labels interchangeably. For example, `SUM(paid_amount) / SUM(order_amount)` is not generally equal to the average of individual order completion ratios.
+Do not use metric labels interchangeably. In particular, the average of per-order completion ratios is not generally equal to `SUM(paid_amount) / SUM(order_amount)`. Refunds, partial-payment reversals, and statuses outside the explicit success/failure vocabulary need a separate business rule before inclusion.
 
 ## Incremental processing metadata
 
