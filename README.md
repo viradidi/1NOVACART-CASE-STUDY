@@ -111,6 +111,7 @@ The JSON preserves configuration intent, but contains environment-specific works
 | [Operations runbook](docs/OPERATIONS_RUNBOOK.md) | Failure investigation, recovery, and reconciliation |
 | [Validation plan](docs/VALIDATION_PLAN.md) | Acceptance criteria and test scenarios to execute |
 | [Artifact audit](docs/ARTIFACT_AUDIT.md) | Review of preserved artifacts, engineering improvements, CI results, and runtime evidence boundaries |
+| [Senior engineering readiness review](docs/SENIOR_ENGINEERING_READINESS.md) | Portfolio assessment, strengths, limitations, and next validation priorities |
 | [Execution record](docs/EXECUTION_RECORD.md) | Owner-confirmed environment run and the evidence retained in this repository |
 | [Release package guide](docs/RELEASE_PACKAGE.md) | How to retrieve the clean, CI-generated project archive |
 
@@ -169,9 +170,15 @@ See the [deployment guide](docs/DEPLOYMENT.md) for the detailed checklist.
 - Set compute limits, auto-termination, and schedules deliberately.
 - Review Azure Cost Management and remove unused resources only after preserving required data and configuration.
 
-## Future improvements
+## Known limitations and next validation milestones
 
-Engineering capabilities include layered incremental processing, Delta MERGE patterns, per-entity Gold processing state, watermark-driven Bronze ingestion, order-grain Gold output, payment-grain failure metrics, category-move refresh logic, SCD Type 2 history, snapshots, and documented orchestration. The project owner reports a successful environment run; detailed replay, same-timestamp, failure-injection, and full-recomputation scenarios should still be documented individually before claiming those edge cases were all independently demonstrated.
+- **Runtime evidence:** the owner-confirmed successful run on 5 November 2026 is recorded, but the repository does not retain its exact deployed commit, Databricks run IDs, task logs, row counts, reconciliation outputs, rendered dashboard screenshot, or SQL-alert delivery evidence.
+- **Incremental-source assumptions:** the timestamp-plus-primary-key cursor depends on reliable source change timestamps and ordered cursor semantics. Late or backdated changes and hard deletes need a deliberate lookback, CDC, or reconciliation strategy; a timestamp watermark alone does not detect every source mutation.
+- **Integration scope:** CI runs local Spark tests against shared transformation functions and validates notebook/configuration contracts. It does not execute the complete notebooks in Databricks or verify Azure SQL federation, Unity Catalog permissions, live Delta transactions, dashboard rendering, or alert delivery.
+- **Operations and performance:** the repository documents recovery procedures, but does not retain measured throughput, cost baselines, latency objectives, alert-response evidence, or production SLOs.
+- **Data realism:** the case study uses synthetic retail data and is an engineering demonstration, not a live retail production service.
+
+The detailed scenario matrix is in the [validation plan](docs/VALIDATION_PLAN.md). These items are evidence and operational-readiness priorities; they do not invalidate the owner-confirmed successful end-to-end run.
 
 ## Project deliverables
 
