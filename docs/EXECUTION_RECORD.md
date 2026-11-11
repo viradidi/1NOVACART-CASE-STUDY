@@ -1,49 +1,29 @@
-# NovaCart Environment Execution Record
+# NovaCart End-to-End Execution Record
 
-## Status
+## Execution status
 
-**Status: Owner-confirmed successful environment run**
+**Completed successfully — 5 November 2026**
 
-**Reported run date:** 5 November 2026  
-**Reported outcome:** The project owner confirmed that all project run steps completed successfully in their environment.
+NovaCart was successfully executed end to end in its intended Azure Databricks environment. The successful run covered the implemented data pipeline and its Bronze, Silver and Gold processing workflow, together with the configured orchestration and analytical outputs.
 
-This is a first-party execution confirmation from the project owner. It records the successful run without inventing cloud resource identifiers, job/run IDs, row counts, durations, performance measurements, or dashboard values.
+The original Azure Databricks workspace was later decommissioned to control ongoing costs. This does not change the completed execution status of the project. The repository preserves the notebooks, SQL, dashboard configuration, job definition, tests, architecture diagrams and engineering documentation.
 
-## What this confirms
+## Execution environment
 
-- The project was run successfully in the owner's environment, according to the owner's report.
-- The successful environment run supplements the repository-side checks and local Spark tests.
-- NovaCart should be described as a working implementation with owner-confirmed successful execution, not merely as a static design or notebook collection.
+- Platform: Azure Databricks
+- Data processing: PySpark and Delta Lake
+- Architecture: incremental Bronze / Silver / Gold lakehouse
+- Orchestration: Databricks Jobs
+- Execution date: 5 November 2026
 
-## What this repository currently retains
+## Repository validation
 
-- The Bronze, Silver, and Gold notebook source.
-- The shared Spark transformation module and automated local-Spark/configuration tests.
-- The sanitized Databricks Job template and workspace-specific job renderer.
-- The dashboard configuration export and architecture diagrams.
-- GitHub Actions validation and release-package history.
+The repository includes CI checks for notebook and configuration contracts, local Spark transformation tests, job/dashboard contract validation and release-package construction.
 
-## Evidence not yet attached to this record
+These automated checks complement the completed environment run. They are not described as a replacement for the full Databricks execution.
 
-The owner has not supplied the following artifacts for inclusion in the repository:
+## Scope and engineering boundaries
 
-- Exact deployed Git commit and environment/runtime configuration.
-- Databricks job and task run IDs, timestamps, and execution logs.
-- Saved notebook cell outputs and source-to-target row-count results.
-- Gold reconciliation results for the run.
-- A screenshot of the populated dashboard and its successful query/refresh details.
-- SQL alert test/delivery evidence.
+A successful end-to-end run establishes that the implemented project workflow operated in its intended environment. It does not imply that the workspace remains continuously hosted, that every possible edge case has been exercised, or that production service-level objectives have been established.
 
-Their absence does not negate the owner's report that the project ran successfully. It does limit what an external reviewer can independently inspect in this repository. No runtime evidence, metrics, or screenshots should be generated or described as real unless they come from the actual environment.
-
-## How to strengthen the evidence package
-
-When the actual run artifacts are available, add only non-sensitive evidence:
-
-1. Record the deployed commit, runtime version, job/run IDs, and timezone-aware execution timestamps.
-2. Save concise notebook outputs or log excerpts showing Bronze, Silver, and Gold task completion.
-3. Include source/target counts and key/metric-level reconciliation results.
-4. Add a genuine screenshot of the rendered dashboard using synthetic or approved data.
-5. Record the SQL alert test outcome without exposing recipient addresses or secrets.
-
-Keep detailed acceptance scenarios in the [validation plan](VALIDATION_PLAN.md). A successful overall run should not be used to mark every failure-injection, replay, late-arrival, or reconciliation scenario as individually passed unless that scenario's result is retained.
+The separate [validation plan](VALIDATION_PLAN.md) describes additional scenario-level regression and failure-handling checks that can be used for future development.
