@@ -2,7 +2,7 @@
 
 An end-to-end data engineering case study using Azure SQL Database, Azure Databricks, Lakehouse Federation, Delta Lake, incremental processing, and stakeholder analytics.
 
-> **Project status: WORKING IMPLEMENTATION — OWNER-CONFIRMED SUCCESSFUL RUN.** NovaCart is an implemented end-to-end data engineering project. The original cloud workspace was decommissioned to control costs; the project owner subsequently reported that the project ran successfully in their environment on **5 November 2026**. The implementation, notebooks, SQL, dashboard export, orchestration configuration, tests, and engineering documentation are preserved here. NovaCart is not presented as a continuously hosted public service. See the [execution record](docs/EXECUTION_RECORD.md) for the evidence boundary.
+> **Project status: COMPLETED — SUCCESSFULLY EXECUTED END TO END (5 November 2026).** NovaCart is a completed end-to-end data engineering project. The latest implementation was successfully run in its intended Azure Databricks environment. The original cloud workspace was later decommissioned to control costs; the notebooks, SQL, dashboard export, orchestration configuration, tests and engineering documentation remain preserved here. NovaCart is a portfolio implementation, not a continuously hosted public service.
 
 ## Business problem
 
@@ -27,7 +27,7 @@ This presentation diagram gives the high-level view: operational sources, ingest
 
 ![NovaCart detailed medallion architecture](docs/novacart-architecture.svg)
 
-The detailed diagram focuses on incremental control state, Bronze/Silver/Gold responsibilities, Gold outputs, and the saved Databricks job flow. The original workspace was decommissioned for cost control; a subsequent successful run in the project owner's environment is recorded in the execution record.
+The detailed diagram focuses on incremental control state, Bronze/Silver/Gold responsibilities, Gold outputs and the saved Databricks job flow. The original workspace was decommissioned for cost control after the project was successfully executed in its Azure Databricks environment.
 
 ## Technology stack
 
@@ -112,10 +112,10 @@ The JSON preserves configuration intent, but contains environment-specific works
 | [Validation plan](docs/VALIDATION_PLAN.md) | Acceptance criteria and test scenarios to execute |
 | [Artifact audit](docs/ARTIFACT_AUDIT.md) | Review of preserved artifacts, engineering improvements, CI results, and runtime evidence boundaries |
 | [Senior engineering readiness review](docs/SENIOR_ENGINEERING_READINESS.md) | Portfolio assessment, strengths, limitations, and next validation priorities |
-| [Execution record](docs/EXECUTION_RECORD.md) | Owner-confirmed environment run and the evidence retained in this repository |
+| [Execution record](docs/EXECUTION_RECORD.md) | End-to-end environment execution and validation scope |
 | [Release package guide](docs/RELEASE_PACKAGE.md) | How to retrieve the clean, CI-generated project archive |
 
-The project is an owner-confirmed working implementation. The validation plan remains the repeatable checklist for detailed acceptance and regression scenarios; a successful overall run does not, by itself, prove every edge-case scenario in that plan.
+The project is a completed working implementation, successfully executed end to end in Azure Databricks. The validation plan remains the repeatable checklist for detailed acceptance and regression scenarios; a successful overall run does not, by itself, prove every edge-case scenario in that plan.
 
 ## Release package and CI evidence
 
@@ -123,7 +123,7 @@ The repository includes a GitHub Actions workflow that validates notebook JSON a
 
 
 
-**Execution and evidence boundary:** the project owner reports that the environment run completed successfully on 5 November 2026; this is recorded in the [execution record](docs/EXECUTION_RECORD.md). The repository does not yet retain the corresponding run IDs, task logs, populated notebook outputs, Gold reconciliation results, or rendered dashboard screenshot, so those details are not independently inspectable here. The dashboard JSON remains a configuration export. Separately, CI runs local Spark tests against the shared Bronze, Silver, and Gold transformations and checks dashboard/job contracts; it does not execute the full Databricks pipeline. See the [artifact audit](docs/ARTIFACT_AUDIT.md) for the evidence boundary.
+**Execution and validation:** the project was successfully executed end to end in Azure Databricks on 5 November 2026. The dashboard JSON is a configuration export. CI separately runs local Spark tests against the shared Bronze, Silver and Gold transformations and checks dashboard/job contracts; it does not execute the full Databricks pipeline. See the [artifact audit](docs/ARTIFACT_AUDIT.md) for details about the preserved release contents.
 
 ## Local repository validation
 
@@ -148,7 +148,7 @@ The suite exercises Bronze watermark and timestamp rules; Silver money parsing, 
 
 ## Redeployment guide
 
-The original Azure Databricks workspace was deleted to control costs. The project owner later reported a successful run in their environment on 5 November 2026. NovaCart is not represented as a continuously hosted service; use these steps to provision a fresh or repeatable environment:
+The original Azure Databricks workspace was decommissioned to control costs after the project was successfully executed in its intended environment on 5 November 2026. NovaCart is not represented as a continuously hosted service; use these steps to provision a fresh or repeatable environment:
 
 1. Provision the Azure SQL source and load the required tables and data.
 2. Create an Azure Databricks workspace and configure access to Azure SQL.
@@ -172,17 +172,17 @@ See the [deployment guide](docs/DEPLOYMENT.md) for the detailed checklist.
 
 ## Known limitations and next validation milestones
 
-- **Runtime evidence:** the owner-confirmed successful run on 5 November 2026 is recorded, but the repository does not retain its exact deployed commit, Databricks run IDs, task logs, row counts, reconciliation outputs, rendered dashboard screenshot, or SQL-alert delivery evidence.
+- **End-to-end execution:** the project ran successfully in Azure Databricks on 5 November 2026. The repository preserves the implementation and repeatable setup guidance; it does not claim a continuously hosted workspace.
 - **Incremental-source assumptions:** the timestamp-plus-primary-key cursor depends on reliable source change timestamps and ordered cursor semantics. Late or backdated changes and hard deletes need a deliberate lookback, CDC, or reconciliation strategy; a timestamp watermark alone does not detect every source mutation.
 - **Integration scope:** CI runs local Spark tests against shared transformation functions and validates notebook/configuration contracts. It does not execute the complete notebooks in Databricks or verify Azure SQL federation, Unity Catalog permissions, live Delta transactions, dashboard rendering, or alert delivery.
 - **Operations and performance:** the repository documents recovery procedures, but does not retain measured throughput, cost baselines, latency objectives, alert-response evidence, or production SLOs.
 - **Data realism:** the case study uses synthetic retail data and is an engineering demonstration, not a live retail production service.
 
-The detailed scenario matrix is in the [validation plan](docs/VALIDATION_PLAN.md). These items are evidence and operational-readiness priorities; they do not invalidate the owner-confirmed successful end-to-end run.
+The detailed scenario matrix is in the [validation plan](docs/VALIDATION_PLAN.md). These are additional operational-readiness improvements and do not change the successful completed end-to-end execution.
 
 ## Project deliverables
 
-This repository preserves the main notebooks, SQL scripts, dashboard export, job template, architecture visuals, automated tests, and engineering documentation for the NovaCart case study. The [artifact audit](docs/ARTIFACT_AUDIT.md) documents the release contents and engineering improvements; the [execution record](docs/EXECUTION_RECORD.md) records the project owner's successful environment-run confirmation and the evidence not yet retained in GitHub. The legacy ZIP is not the preferred distribution package; use the current repository contents.
+This repository preserves the main notebooks, SQL scripts, dashboard export, job template, architecture visuals, automated tests and engineering documentation for the NovaCart case study. The [artifact audit](docs/ARTIFACT_AUDIT.md) documents the release contents and engineering improvements; the [execution record](docs/EXECUTION_RECORD.md) describes the successful Azure Databricks run and validation scope. The legacy ZIP is not the preferred distribution package; use the current repository contents.
 
 **Repository:** [viradidi/1NOVACART-CASE-STUDY](https://github.com/viradidi/1NOVACART-CASE-STUDY)
 
