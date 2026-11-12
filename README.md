@@ -1,8 +1,24 @@
 # NovaCart | Incremental Retail Data Engineering Platform
 
-An end-to-end data engineering case study using Azure SQL Database, Azure Databricks, Lakehouse Federation, Delta Lake, incremental processing, and stakeholder analytics.
+An incremental retail lakehouse that combines Azure SQL Database, Databricks Lakehouse Federation and Delta Lake to build governed Bronze, Silver and Gold data products for order, payment and category analytics.
+
+**Stack:** Azure SQL Database, Azure Databricks, Lakehouse Federation, Apache Spark / PySpark, Delta Lake, Databricks Jobs, Unity Catalog, SQL, GitHub Actions.
 
 > **Project status: COMPLETED — SUCCESSFULLY EXECUTED END TO END (5 November 2026).** NovaCart is a completed end-to-end data engineering project. The latest implementation was successfully run in its intended Azure Databricks environment. The original cloud workspace was later decommissioned to control costs; the notebooks, SQL, dashboard export, orchestration configuration, tests and engineering documentation remain preserved here. NovaCart is a portfolio implementation, not a continuously hosted public service.
+
+## Platform at a glance
+
+| Area | Implementation |
+|---|---|
+| Business domain | Retail orders, products and payments |
+| Source | Azure SQL Database |
+| Source access | Databricks Lakehouse Federation |
+| Processing | Azure Databricks and PySpark |
+| Storage and table format | Delta Lake |
+| Incremental state | Timestamp and primary-key watermarks |
+| Historical model | SCD Type 2 order history |
+| Orchestration | Databricks Jobs |
+| Analytics | Gold datasets and Databricks SQL dashboard |
 
 ## Business problem
 
@@ -87,7 +103,7 @@ Downstream tasks use `ALL_SUCCESS` dependencies. The job configuration enables q
 
 The JSON preserves configuration intent, but contains environment-specific workspace paths and resource IDs. These must be updated when redeploying. The presence of an exported dashboard or job definition does not mean those live resources still exist.
 
-## Engineering patterns and trade-offs
+## Design decisions and trade-offs
 
 **Incremental processing:** Watermarks reduce unnecessary reads, but correctness depends on timestamp quality, ties, late-arriving updates, and when checkpoints are advanced.
 
@@ -99,7 +115,7 @@ The JSON preserves configuration intent, but contains environment-specific works
 
 **Lakehouse Federation:** Direct source access avoids a conventional extraction connector for that access path, but still depends on source availability, permissions, networking, and query performance.
 
-## Documentation and engineering evidence
+## Engineering documentation
 
 | Document | Purpose |
 |---|---|
@@ -110,22 +126,22 @@ The JSON preserves configuration intent, but contains environment-specific works
 | [Engineering decisions](docs/ENGINEERING_DECISIONS.md) | Rationale, trade-offs, and correctness conditions |
 | [Operations runbook](docs/OPERATIONS_RUNBOOK.md) | Failure investigation, recovery, and reconciliation |
 | [Validation plan](docs/VALIDATION_PLAN.md) | Acceptance criteria and test scenarios to execute |
-| [Artifact audit](docs/ARTIFACT_AUDIT.md) | Review of preserved artifacts, engineering improvements, CI results, and runtime evidence boundaries |
+| [Artifact audit](docs/ARTIFACT_AUDIT.md) | Review of preserved artifacts, engineering improvements, CI checks, and execution scope |
 | [Senior engineering readiness review](docs/SENIOR_ENGINEERING_READINESS.md) | Portfolio assessment, strengths, limitations, and next validation priorities |
 | [Execution record](docs/EXECUTION_RECORD.md) | End-to-end environment execution and validation scope |
 | [Release package guide](docs/RELEASE_PACKAGE.md) | How to retrieve the clean, CI-generated project archive |
 
 The project is a completed working implementation, successfully executed end to end in Azure Databricks. The validation plan remains the repeatable checklist for detailed acceptance and regression scenarios; a successful overall run does not, by itself, prove every edge-case scenario in that plan.
 
-## Release package and CI evidence
+## Automated validation and release package
 
 The repository includes a GitHub Actions workflow that validates notebook JSON and Python cell syntax, job/dashboard JSON, both architecture SVGs, README documentation links, and the shared-module imports. It then runs local-Spark transformation tests for Bronze, Silver, and Gold, checks job/dashboard contracts, and builds and inspects a clean `NovaCart-Release.zip` artifact. Open the [NovaCart release workflow history](https://github.com/viradidi/1NOVACART-CASE-STUDY/actions/workflows/package-novacart-release.yml) and download the `NovaCart-Release` artifact from the latest successful run; GitHub retains workflow artifacts for 30 days. The workflow runs local Spark tests and checks the release package, but it is not a live Databricks pipeline execution. See the [release package guide](docs/RELEASE_PACKAGE.md).
 
 
 
-**Execution and validation:** the project was successfully executed end to end in Azure Databricks on 5 November 2026. The dashboard JSON is a configuration export. CI separately runs local Spark tests against the shared Bronze, Silver and Gold transformations and checks dashboard/job contracts; it does not execute the full Databricks pipeline. See the [artifact audit](docs/ARTIFACT_AUDIT.md) for details about the preserved release contents.
+**Execution status:** the project was successfully executed end to end in Azure Databricks on 5 November 2026. The dashboard JSON is the versioned dashboard configuration. CI separately runs local Spark tests against shared Bronze, Silver and Gold transformations and checks dashboard/job contracts; it does not execute the full Databricks pipeline. See the [artifact audit](docs/ARTIFACT_AUDIT.md) for details about the preserved release contents.
 
-## Local repository validation
+## Run tests locally
 
 The repository-side test suite runs with Python 3.11, Java 17, and the pinned PySpark dependency:
 
